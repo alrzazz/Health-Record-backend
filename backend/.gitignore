@@ -3,3 +3,4 @@ venv
 .vscode
 *__
 db.sqlite3
+/media

@@ -1,66 +1,54 @@
-from rest_framework import permissions, generics
+from rest_framework import permissions, generics, viewsets
 from rest_framework.response import Response
-from rest_framework_jwt.settings import api_settings
-from django.contrib.auth import authenticate, login
-from django.contrib.auth.models import User
-from .serializer import TokenSerializer
-
-jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
-jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
+from .serializer import RetrieveUserSerializer, DoctorSerializer, PatientSerializer
+from rest_framework import status, permissions
+from rest_framework_simplejwt.tokens import RefreshToken
+from .models import User, Doctor, Patient
+from .permissions import IsManager, IsPatient, IsDoctor, NotManager
 
 
-class LoginView(generics.CreateAPIView):
-    """
-    POST auth/login/
-    """
-    permission_classes = (permissions.AllowAny,)
+class UserLogoutView(generics.CreateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
 
-    # queryset = User.objects.all()
-
-    def post(self, request, *args, **kwargs):
-        username = request.data.get("username", "")
-        password = request.data.get("password", "")
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            serializer = TokenSerializer(data={
-                "token": jwt_encode_handler(
-                    jwt_payload_handler(user)
-                )})
-            serializer.is_valid()
-            return Response(serializer.data)
-        return Response(status=status.HTTP_401_UNAUTHORIZED)
-
-
-class SignUpView(generics.CreateAPIView):
-    """
-    POST auth/signup/
-    """
-    permission_classes = (permissions.AllowAny,)
-
-    def post(self, request, *args, **kwargs):
-        username = request.data.get("username", "")
-        password = request.data.get("password", "")
-        email = request.data.get("email", "")
-        if not username and not password and not email:
-            return Response(
-                data={
-                    "message": "username, password and email is required to register a user"
-                },
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        new_user = User.objects.create_user(
-            username=username, password=password, email=email
-        )
-        return Response(status=status.HTTP_201_CREATED)
+    def post(self, request, format='json'):
+        token = RefreshToken(request.data.get("refresh"))
+        token.blacklist()
+        data = {'message': "خروج شما با موفقیت انجام شد."}
+        return Response(data=data, status=status.HTTP_200_OK)
 
 
 class RetrieveUserView(generics.RetrieveAPIView):
-    """
-    POST auth/retrieve/
-    """
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = [permissions.IsAuthenticated]
 
-    def get(self, request, *args, **kwargs):
-        print(request.user)
-        return Response(data={"user": "is auth"})
+    def get(self, request, format='json'):
+        serializer = RetrieveUserSerializer(request.user)
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+
+class ProfileUserView(generics.RetrieveAPIView):
+    permission_classes = [NotManager]
+
+    def get(self, request, format='json'):
+        try:
+            if(request.user.role == 1):
+                serializer = DoctorSerializer(
+                    Doctor.objects.get(user_id=request.user.id))
+                return Response(data=serializer.data, status=status.HTTP_200_OK)
+            else:
+                serializer = PatientSerializer(
+                    Patient.objects.get(user_id=request.user.id))
+                return Response(data=serializer.data, status=status.HTTP_200_OK)
+        except:
+            return Response(data={"message": "user not found"}, status=status.HTTP_403_FORBIDDEN)
+
+
+class ManageDoctorsView(viewsets.ModelViewSet):
+    permission_classes = [IsManager]
+    queryset = Doctor.objects.all()
+    serializer_class = DoctorSerializer
+
+
+class ManagePatientsView(viewsets.ModelViewSet):
+    permission_classes = [IsManager]
+    queryset = Patient.objects.all()
+    serializer_class = PatientSerializer

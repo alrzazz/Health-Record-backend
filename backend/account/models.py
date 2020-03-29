@@ -1,6 +1,5 @@
 from django.utils import timezone
-from .manager import UserManager
-from django.contrib.auth.models import UnicodeUsernameValidator, AbstractBaseUser, PermissionsMixin
+from django.contrib.auth.models import UnicodeUsernameValidator, AbstractBaseUser, PermissionsMixin, UserManager
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.core.mail import send_mail
@@ -28,7 +27,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         'unique': ("کاربری با این ایمیل موجود است."),
     })
     role = models.PositiveSmallIntegerField(
-        choices=ROLES, primary_key=True, default=0)
+        choices=ROLES, default=0)
     date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
 
     is_staff = models.BooleanField(
@@ -74,7 +73,7 @@ class Patient(models.Model):
     address = models.TextField(max_length=400)
     birth_date = models.DateField()
     gender = models.PositiveSmallIntegerField(
-        choices=GENDERS, primary_key=True)
+        choices=GENDERS)
 
 
 class Doctor(models.Model):
@@ -88,4 +87,4 @@ class Doctor(models.Model):
     bio = models.TextField(max_length=400, blank=True)
     avatar = models.ImageField(upload_to="avatar/")
     gender = models.PositiveSmallIntegerField(
-        choices=GENDERS, primary_key=True)
+        choices=GENDERS)
