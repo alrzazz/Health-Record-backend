@@ -13,8 +13,9 @@ urlpatterns = [
     path('login/', TokenObtainPairView.as_view(), name="login-user"),
     path('refresh/', TokenRefreshView.as_view(), name="refresh-user"),
     path('retrieve/', views.RetrieveUserView.as_view(), name="retrieve-user"),
-    path('profile/', views.ProfileUserView.as_view(), name="profile-user"),
+    path('profile/', views.ProfileView.as_view(), name="profile-user"),
     path('logout/', views.UserLogoutView.as_view(), name="logout-user"),
+    path('change-password/', views.UserChangePasswordView.as_view(),
+         name="logout-user"),
     path('manage/', include(manage_router.urls))
 ]
-
