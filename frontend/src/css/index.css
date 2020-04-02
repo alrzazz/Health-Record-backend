@@ -1,0 +1,19 @@
+@font-face {
+  font-family: Sahel;
+  src: url("./../static/fonts/Sahel-FD.ttf");
+  font-weight: bolder;
+}
+
+body {
+  margin: 0;
+  font-family: "Sahel";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  direction: rtl;
+  font-size: medium;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
