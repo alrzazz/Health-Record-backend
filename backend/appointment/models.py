@@ -1,26 +1,37 @@
 from django.db import models
-from account.models import User
+from account.models import User, Doctor, Patient
 
 
 class Turn(models.Model):
-    doctor = models.ForeignKey(User, on_delete=models.CASCADE)
-    patient = models.ForeignKey(User, on_delete=models.CASCADE, required=False)
+    doctor = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="doctor_turn")
+    patient = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="patient_turn", null=True)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     accepted = models.BooleanField(default=False)
     visited = models.BooleanField(default=False)
+
+    def __str__(self):
+        return "{}- {} to {}".format(self.id, self.start_time, self.end_time)
 
 
 class Symptom(models.Model):
     doctor = models.ForeignKey(User, on_delete=models.CASCADE)
     kind = models.IntegerField(default=0)
     name = models.CharField(max_length=50)
-    value = models.FloatField(required=False)
+    value = models.FloatField()
+
+    def __str__(self):
+        return self.name
 
 
 class Disease(models.Model):
     doctor = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.name
 
 
 class Advice(models.Model):
@@ -28,16 +39,25 @@ class Advice(models.Model):
     name = models.CharField(max_length=50)
     description = models.TextField()
 
+    def __str__(self):
+        return self.name
+
 
 class Medicine(models.Model):
     doctor = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
     duration = models.DurationField()
 
+    def __str__(self):
+        return self.name
+
 
 class Appointment(models.Model):
-    turn = models.OneToOneField(Turn)
-    symptom = models.ForeignKey(Symptom, on_delete=models.CASCADE)
-    disease = models.ForeignKey(Disease, on_delete=models.CASCADE)
-    advice = models.ForeignKey(Advice, on_delete=models.CASCADE)
-    medicine = models.ForeignKey(Medicine, on_delete=models.CASCADE)
+    turn = models.OneToOneField(Turn, on_delete=models.CASCADE)
+    symptoms = models.ManyToManyField(Symptom)
+    disease = models.ManyToManyField(Disease)
+    advices = models.ManyToManyField(Advice)
+    medicines = models.ManyToManyField(Medicine)
+
+    def __str__(self):
+        return self.name

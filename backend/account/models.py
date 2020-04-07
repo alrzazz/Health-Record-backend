@@ -3,6 +3,8 @@ from django.contrib.auth.models import UnicodeUsernameValidator, AbstractBaseUse
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.core.mail import send_mail
+from django.contrib.postgres.fields import HStoreField
+
 
 GENDERS = ((0, 'male'), (1, 'female'),)
 ROLES = ((0, 'Manager'), (1, 'Doctor'), (2, 'Patient'))
@@ -20,11 +22,11 @@ class User(AbstractBaseUser, PermissionsMixin):
             'Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.'),
         validators=[username_validator],
         error_messages={
-            'unique': _("کاربری با این شماره ملی موجود است."),
+            'unique': _("A user with that username already exists."),
         },
     )
     email = models.EmailField(_('email address'), blank=True, error_messages={
-        'unique': ("کاربری با این ایمیل موجود است."),
+        'unique': ("A user with that email already exists."),
     })
     role = models.PositiveSmallIntegerField(
         choices=ROLES, default=0)
@@ -44,6 +46,8 @@ class User(AbstractBaseUser, PermissionsMixin):
             'Unselect this instead of deleting accounts.'
         ),
     )
+
+    actions = HStoreField(default=dict)
 
     objects = UserManager()
 
@@ -66,7 +70,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 class Patient(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, unique=True)
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, unique=True, related_name="patient_profile")
     first_name = models.CharField(max_length=150)
     last_name = models.CharField(max_length=150)
     mobile_number = models.CharField(max_length=150)
@@ -77,7 +82,8 @@ class Patient(models.Model):
 
 
 class Doctor(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, unique=True)
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, unique=True, related_name="doctor_profile")
     first_name = models.CharField(max_length=150)
     last_name = models.CharField(max_length=150)
     phone_number = models.CharField(max_length=150)

@@ -1,6 +1,6 @@
 venv
 *.pyc
 .vscode
-*__
+**/__pycache__
 db.sqlite3
 /media

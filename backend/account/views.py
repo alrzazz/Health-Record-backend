@@ -1,11 +1,10 @@
 from .permissions import IsManager, IsPatient, IsDoctor, NotManager
 from .models import User, Doctor, Patient
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework import status, permissions
+from rest_framework import status, permissions, exceptions
 from rest_framework import permissions, generics, viewsets, views
 from rest_framework.response import Response
-from .serializer import (RetrieveUserSerializer, DoctorSerializer, PatientSerializer,
-                         PatientProfileSerializer, ChangePasswordSerializer)
+from .serializer import *
 import json
 
 
@@ -15,7 +14,7 @@ class UserLogoutView(generics.CreateAPIView):
     def post(self, request, format='json'):
         token = RefreshToken(request.data.get("refresh"))
         token.blacklist()
-        data = {'message': "خروج شما با موفقیت انجام شد."}
+        data = {'message': "Logged out successfully"}
         return Response(data=data, status=status.HTTP_200_OK)
 
 
@@ -61,11 +60,17 @@ class ManageDoctorsView(viewsets.ModelViewSet):
     queryset = Doctor.objects.all()
     serializer_class = DoctorSerializer
 
+    def update(self, request, pk=None):
+        raise exceptions.MethodNotAllowed(request.method)
+
 
 class ManagePatientsView(viewsets.ModelViewSet):
     permission_classes = [IsManager]
     queryset = Patient.objects.all()
     serializer_class = PatientSerializer
+
+    def update(self, request, pk=None):
+        raise exceptions.MethodNotAllowed(request.method)
 
 
 class UserChangePasswordView(generics.UpdateAPIView):

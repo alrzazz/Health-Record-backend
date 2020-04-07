@@ -13,7 +13,8 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username', 'email', 'password', 'role')
-        extra_kwargs = {'password': {'write_only': True}}
+        extra_kwargs = {'password': {'write_only': True},
+                        'role': {'read_only': True}}
 
 
 class DoctorSerializer(serializers.ModelSerializer):
@@ -24,7 +25,8 @@ class DoctorSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def create(self, validated_data):
-        user_ins = User.objects.create_user(**dict(validated_data.pop("user")))
+        user_ins = User.objects.create_user(
+            **dict(validated_data.pop("user"), role=1))
         doctor = Doctor.objects.create(user_id=user_ins.pk, **validated_data)
         return doctor
 
@@ -45,9 +47,6 @@ class DoctorSerializer(serializers.ModelSerializer):
         instance.address = validated_data.get("address", instance.address)
         instance.bio = validated_data.get("bio", instance.bio)
         instance.avatar = validated_data.get("avatar", instance.avatar)
-        # instance.birth_date = validated_data.get(
-        #     "birth_date", instance.birth_date)
-        # instance.gender = validated_data.get("gender", instance.gender)
         instance.save()
         return instance
 
@@ -60,7 +59,8 @@ class PatientSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def create(self, validated_data):
-        user_ins = User.objects.create_user(**dict(validated_data.pop("user")))
+        user_ins = User.objects.create_user(
+            **dict(validated_data.pop("user")), role=2)
         patient = Patient.objects.create(user_id=user_ins.pk, **validated_data)
         return patient
 
@@ -79,9 +79,6 @@ class PatientSerializer(serializers.ModelSerializer):
         instance.mobile_number = validated_data.get(
             "mobile_number", instance.mobile_number)
         instance.address = validated_data.get("address", instance.address)
-        # instance.birth_date = validated_data.get(
-        #     "birth_date", instance.birth_date)
-        # instance.gender = validated_data.get("gender", instance.gender)
         instance.save()
         return instance
 
