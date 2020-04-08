@@ -5,10 +5,12 @@ from rest_framework.routers import DefaultRouter, DynamicRoute
 # appointment/...
 
 router = DefaultRouter()
-router.register('advice', views.ManageAdviceView, basename='advice-view')
-router.register('disease', views.ManageDiseaseView, basename='disease-view')
-router.register('symptom', views.ManageSymptomView, basename='symptom-view')
-router.register('medicine', views.ManageMedicineView, basename='medicine-view')
+router.register('advice', views.ManageAdviceView, basename='advice')
+router.register('disease', views.ManageDiseaseView, basename='disease')
+router.register('symptom', views.ManageSymptomView, basename='symptom')
+router.register('medicine', views.ManageMedicineView, basename='medicine')
+router.register('manage', views.DoctorAppointment,
+                basename='appointment-doctor')
 
 urlpatterns = [
     path('doctor/', include(router.urls)),
@@ -33,4 +35,6 @@ urlpatterns = [
                                         "post": "accept_turn"})),
     path("patient/turn/",
          views.PatientTurnView.as_view({"post": "get_own_turn"})),
+    path("patient/manage/",
+         views.PatientTurnView.as_view({"get": "get_own_appointment"}))
 ]

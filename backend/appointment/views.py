@@ -42,9 +42,6 @@ class ManageMedicineView(viewsets.ModelViewSet):
             doctor_id=self.request.user.id)
 
 
-viewsets.ModelViewSet
-
-
 class DoctorTurnView(viewsets.ViewSet):
     permission_classes = [IsDoctor]
 
@@ -63,6 +60,14 @@ class DoctorTurnView(viewsets.ViewSet):
         queryset = Turn.objects.filter(**request.data, doctor=request.user.id)
         serializer = TurnSerializer(queryset, many=True)
         return Response(serializer.data)
+
+
+class DoctorAppointment(viewsets.ModelViewSet):
+    permission_classes = [IsDoctor]
+    serializer_class = AppointmentSerializer
+
+    def get_queryset(self):
+        return Appointment.objects.all().filter(turn__doctor_id=self.request.user.id)
 
 
 class PatientTurnView(viewsets.ViewSet):
@@ -141,4 +146,9 @@ class PatientTurnView(viewsets.ViewSet):
     def get_own_turn(self, request):
         queryset = Turn.objects.all().filter(**request.data, patient_id=request.user.id)
         serializer = TurnSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def get_own_appointment(self, request):
+        queryset = Appointment.objects.filter(turn__patient_id=request.user.id)
+        serializer = AppointmentSerializerRecursive(queryset, many=True)
         return Response(serializer.data)

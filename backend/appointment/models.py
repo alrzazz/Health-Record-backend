@@ -60,4 +60,4 @@ class Appointment(models.Model):
     medicines = models.ManyToManyField(Medicine)
 
     def __str__(self):
-        return self.name
+        return self.turn.__str__()

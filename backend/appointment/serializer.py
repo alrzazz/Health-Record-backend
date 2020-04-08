@@ -66,6 +66,36 @@ class AppointmentSerializer(serializers.ModelSerializer):
         model = Appointment
         fields = "__all__"
 
+    def validate(self, data):
+        turn = data["turn"]
+        if turn.accepted == False:
+            raise serializers.ValidationError(
+                "This turn still not accepted")
+        if turn.visited == True:
+            raise serializers.ValidationError(
+                "This turn already has an appointment")
+        return data
+
+    def create(self, validated_data):
+        turn = validated_data["turn"]
+        turn.visited = True
+        turn.save()
+        return super().create(validated_data)
+        # appointment = Appointment.objects.create(**validated_data)
+        # return appointment
+
+
+class AppointmentSerializerRecursive(serializers.ModelSerializer):
+    turn = TurnSerializer(read_only=True)
+    advices = AdviceSerializer(many=True)
+    symptoms = SymptomSerializer(many=True)
+    medicines = MedicineSerializer(many=True)
+    disease = DiseaseSerializer(many=True)
+
+    class Meta:
+        model = Appointment
+        fields = "__all__"
+
 
 class DoctorSerializer(serializers.ModelSerializer):
 

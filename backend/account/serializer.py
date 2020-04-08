@@ -25,9 +25,9 @@ class DoctorSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def create(self, validated_data):
-        user_ins = User.objects.create_user(
+        user = User.objects.create_user(
             **dict(validated_data.pop("user"), role=1))
-        doctor = Doctor.objects.create(user_id=user_ins.pk, **validated_data)
+        doctor = Doctor.objects.create(user_id=user.pk, **validated_data)
         return doctor
 
     def update(self, instance, validated_data):
@@ -59,9 +59,9 @@ class PatientSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def create(self, validated_data):
-        user_ins = User.objects.create_user(
+        user = User.objects.create_user(
             **dict(validated_data.pop("user")), role=2)
-        patient = Patient.objects.create(user_id=user_ins.pk, **validated_data)
+        patient = Patient.objects.create(user_id=user.pk, **validated_data)
         return patient
 
     def update(self, instance, validated_data):

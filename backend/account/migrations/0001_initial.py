@@ -54,6 +54,7 @@ class Migration(migrations.Migration):
                 ('address', models.TextField(max_length=400)),
                 ('birth_date', models.DateField()),
                 ('gender', models.PositiveSmallIntegerField(choices=[(0, 'male'), (1, 'female')])),
+                ('avatar', models.ImageField(upload_to='avatar/')),
                 ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='patient_profile', to=settings.AUTH_USER_MODEL)),
             ],
         ),

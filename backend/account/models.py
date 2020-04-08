@@ -77,6 +77,7 @@ class Patient(models.Model):
     mobile_number = models.CharField(max_length=150)
     address = models.TextField(max_length=400)
     birth_date = models.DateField()
+    avatar = models.ImageField(upload_to="avatar/")
     gender = models.PositiveSmallIntegerField(
         choices=GENDERS)
 
