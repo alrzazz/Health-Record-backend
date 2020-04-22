@@ -3,7 +3,6 @@ from django.contrib.auth.models import UnicodeUsernameValidator, AbstractBaseUse
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.core.mail import send_mail
-from django.contrib.postgres.fields import HStoreField
 
 
 GENDERS = ((0, 'male'), (1, 'female'),)
@@ -47,8 +46,6 @@ class User(AbstractBaseUser, PermissionsMixin):
         ),
     )
 
-    actions = HStoreField(default=dict)
-
     objects = UserManager()
 
     EMAIL_FIELD = 'email'
@@ -81,6 +78,9 @@ class Patient(models.Model):
     gender = models.PositiveSmallIntegerField(
         choices=GENDERS)
 
+    def __str__(self):
+        return "{0} : {1} {2}".format(self.user.username, self.first_name, self.last_name)
+
 
 class Doctor(models.Model):
     user = models.OneToOneField(
@@ -95,3 +95,6 @@ class Doctor(models.Model):
     avatar = models.ImageField(upload_to="avatar/")
     gender = models.PositiveSmallIntegerField(
         choices=GENDERS)
+
+    def __str__(self):
+        return "{0} : {1} {2}".format(self.user.username, self.first_name, self.last_name)
