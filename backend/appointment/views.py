@@ -42,24 +42,13 @@ class ManageMedicineView(viewsets.ModelViewSet):
             doctor_id=self.request.user.id)
 
 
-class DoctorTurnView(viewsets.ViewSet):
+class DoctorTurnView(mixins.CreateModelMixin, mixins.ListModelMixin,
+                     mixins.DestroyModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     permission_classes = [IsDoctor]
+    serializer_class = TurnSerializer
 
-    def create_turn(self, request):
-        serializer = TurnSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        turn = Turn.objects.create(**serializer.data, doctor=request.user)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    def delete_turn(self, request, pk=None):
-        instance = Turn.objects.get(id=pk)
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-    def list_turn(self, request):
-        queryset = Turn.objects.filter(**request.data, doctor=request.user.id)
-        serializer = TurnSerializer(queryset, many=True)
-        return Response(serializer.data)
+    def get_queryset(self):
+        return Turn.objects.all().filter(doctor_id=self.request.user.id)
 
 
 class DoctorAppointment(viewsets.ModelViewSet):

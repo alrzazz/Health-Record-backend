@@ -60,6 +60,9 @@ class TurnSerializer(serializers.ModelSerializer):
                         'accepted': {'read_only': True},
                         'visited': {'read_only': True}}
 
+    def create(self, validated_data):
+        return Turn.objects.create(**validated_data, doctor=self.context['request'].user)
+
 
 class AppointmentSerializer(serializers.ModelSerializer):
     class Meta:
