@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Turn, Symptom, Disease, Advice, Medicine, Appointment
-from account.models import Doctor
+from account.models import Doctor, Patient
 
 
 class SymptomSerializer(serializers.ModelSerializer):
@@ -11,7 +11,7 @@ class SymptomSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         symptom = Symptom.objects.create(
-            **validated_data, doctor=self.context['request'].user)
+            **validated_data, doctor=Doctor.objects.get(user_id=self.context['request'].user.id))
         return symptom
 
 
@@ -23,7 +23,7 @@ class DiseaseSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         disease = Disease.objects.create(
-            **validated_data, doctor=self.context['request'].user)
+            **validated_data, doctor=Doctor.objects.get(user_id=self.context['request'].user.id))
         return disease
 
 
@@ -35,7 +35,7 @@ class AdviceSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         advice = Advice.objects.create(
-            **validated_data, doctor=self.context['request'].user)
+            **validated_data, doctor=Doctor.objects.get(user_id=self.context['request'].user.id))
         return advice
 
 
@@ -47,7 +47,7 @@ class MedicineSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         medicine = Medicine.objects.create(
-            **validated_data, doctor=self.context['request'].user)
+            **validated_data, doctor=Doctor.objects.get(user_id=self.context['request'].user.id))
         return medicine
 
 
@@ -61,7 +61,7 @@ class TurnSerializer(serializers.ModelSerializer):
                         'visited': {'read_only': True}}
 
     def create(self, validated_data):
-        return Turn.objects.create(**validated_data, doctor=self.context['request'].user)
+        return Turn.objects.create(**validated_data, doctor=Doctor.objects.get(user_id=self.context['request'].user.id))
 
 
 class AppointmentSerializer(serializers.ModelSerializer):
