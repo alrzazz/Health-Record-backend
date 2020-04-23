@@ -11,7 +11,8 @@ doctor_router.register('symptoms', views.ManageSymptomView, basename='symptom')
 doctor_router.register(
     'medicines', views.ManageMedicineView, basename='medicine')
 doctor_router.register('turns', views.DoctorTurnView, basename='turn-doctor')
-# doctor_router.register('', views.DoctorAppointment,basename='appointment-doctor')
+doctor_router.register('all', views.DoctorAppointment,
+                       basename='appointment-doctor')
 urlpatterns = [
     path('doctor/', include(doctor_router.urls)),
     path("patient/doctors/",
@@ -23,7 +24,7 @@ urlpatterns = [
     path("patient/doctors/<doctor_pk>/turns/<turn_pk>/",
          views.PatientTurnView.as_view({"get": "get_turn", "post": "accept_turn"})),
     path("patient/turns/",
-         views.PatientTurnView.as_view({"post": "get_own_turn"})),
+         views.PatientTurnView.as_view({"get": "get_own_turn"})),
     path("patient/",
          views.PatientTurnView.as_view({"get": "get_own_appointment"}))
 ]
