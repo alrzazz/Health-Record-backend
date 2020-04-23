@@ -74,7 +74,7 @@ class Patient(models.Model):
     mobile_number = models.CharField(max_length=150)
     address = models.TextField(max_length=400)
     birth_date = models.DateField()
-    avatar = models.ImageField(upload_to="avatar/")
+    avatar = models.ImageField(upload_to="avatar/", blank=True)
     gender = models.PositiveSmallIntegerField(
         choices=GENDERS)
 
@@ -90,9 +90,9 @@ class Doctor(models.Model):
     phone_number = models.CharField(max_length=150)
     address = models.TextField(max_length=400)
     birth_date = models.DateField()
-    specialty = models.CharField(max_length=150)
+    speciality = models.CharField(max_length=150)
     bio = models.TextField(max_length=400, blank=True)
-    avatar = models.ImageField(upload_to="avatar/")
+    avatar = models.ImageField(upload_to="avatar/", blank=True)
     gender = models.PositiveSmallIntegerField(
         choices=GENDERS)
 

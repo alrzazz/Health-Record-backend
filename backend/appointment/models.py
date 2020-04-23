@@ -1,12 +1,12 @@
 from django.db import models
-from account.models import User, Doctor, Patient
+from account.models import Doctor, Patient
 
 
 class Turn(models.Model):
     doctor = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="doctor_turn")
+        Doctor, on_delete=models.CASCADE, related_name="doctor_turn")
     patient = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="patient_turn", null=True)
+        Patient, on_delete=models.CASCADE, related_name="patient_turn", null=True)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     accepted = models.BooleanField(default=False)
@@ -17,7 +17,7 @@ class Turn(models.Model):
 
 
 class Symptom(models.Model):
-    doctor = models.ForeignKey(User, on_delete=models.CASCADE)
+    doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
     kind = models.IntegerField(default=0)
     name = models.CharField(max_length=50)
     value = models.FloatField()
@@ -27,7 +27,7 @@ class Symptom(models.Model):
 
 
 class Disease(models.Model):
-    doctor = models.ForeignKey(User, on_delete=models.CASCADE)
+    doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
 
     def __str__(self):
@@ -35,7 +35,7 @@ class Disease(models.Model):
 
 
 class Advice(models.Model):
-    doctor = models.ForeignKey(User, on_delete=models.CASCADE)
+    doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
     description = models.TextField()
 
@@ -44,7 +44,7 @@ class Advice(models.Model):
 
 
 class Medicine(models.Model):
-    doctor = models.ForeignKey(User, on_delete=models.CASCADE)
+    doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
     duration = models.DurationField()
 
