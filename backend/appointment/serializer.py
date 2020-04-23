@@ -81,6 +81,8 @@ class AppointmentSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         turn = validated_data["turn"]
+        if turn.doctor.user.id != self.context['request'].user.id:
+            raise serializers.ValidationError("You can't visit this turn")
         turn.visited = True
         turn.save()
         return super().create(validated_data)
