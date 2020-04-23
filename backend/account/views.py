@@ -6,6 +6,7 @@ from rest_framework import permissions, generics, viewsets, views
 from rest_framework.response import Response
 from .serializer import *
 import json
+from .pagination import ItemlimitPgination
 
 
 class UserLogoutView(generics.CreateAPIView):
@@ -59,6 +60,7 @@ class ManageDoctorsView(viewsets.ModelViewSet):
     permission_classes = [IsManager]
     queryset = Doctor.objects.all()
     serializer_class = DoctorSerializer
+    pagination_class = ItemlimitPgination
 
     def update(self, request, pk=None):
         raise exceptions.MethodNotAllowed(request.method)
@@ -68,6 +70,7 @@ class ManagePatientsView(viewsets.ModelViewSet):
     permission_classes = [IsManager]
     queryset = Patient.objects.all()
     serializer_class = PatientSerializer
+    pagination_class = ItemlimitPgination
 
     def update(self, request, pk=None):
         raise exceptions.MethodNotAllowed(request.method)
