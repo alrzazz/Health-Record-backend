@@ -84,14 +84,8 @@ class UserChangePasswordView(generics.UpdateAPIView):
                 return Response({"old_password": ["Wrong password."]}, status=status.HTTP_400_BAD_REQUEST)
             user_ins.set_password(serializer.data.get("new_password"))
             user_ins.save()
-            response = {
-                'status': 'success',
-                'code': status.HTTP_200_OK,
-                'message': 'Password updated successfully',
-                'data': []
-            }
 
-            return Response(response)
+            return Response(data={'message': 'Password updated successfully'}, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

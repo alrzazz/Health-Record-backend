@@ -92,13 +92,12 @@ class PatientProfileSerializer(serializers.ModelSerializer):
 
 
 class ChangePasswordSerializer(serializers.Serializer):
-    model = User
-    old_password1 = serializers.CharField(required=True)
-    old_password2 = serializers.CharField(required=True)
-    new_password = serializers.CharField(required=True)
+    old_password = serializers.CharField(required=True)
+    new_password1 = serializers.CharField(required=True)
+    new_password2 = serializers.CharField(required=True)
 
     def validate(self, data):
-        if data["old_password1"] != data["old_password2"]:
+        if data["new_password1"] != data["new_password2"]:
             raise serializers.ValidationError(
                 "confirmation password not match")
         return data
