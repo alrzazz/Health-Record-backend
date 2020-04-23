@@ -3,6 +3,15 @@ from .models import *
 from .serializer import *
 from rest_framework import viewsets, mixins, status, views
 from rest_framework.response import Response
+from django.http import Http404
+from django.shortcuts import get_object_or_404 as _get_object_or_404
+
+
+def get_object_or_404(queryset, *filter_args, **filter_kwargs):
+    try:
+        return _get_object_or_404(queryset, *filter_args, **filter_kwargs)
+    except:
+        raise Http404
 
 
 class ManageSymptomView(viewsets.ModelViewSet):
@@ -11,7 +20,7 @@ class ManageSymptomView(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Symptom.objects.all().filter(
-            doctor_id=self.request.user.id)
+            doctor__user_id=self.request.user.id)
 
 
 class ManageDiseaseView(viewsets.ModelViewSet):
@@ -21,7 +30,7 @@ class ManageDiseaseView(viewsets.ModelViewSet):
     def get_queryset(self):
         self.get_object
         return Disease.objects.all().filter(
-            doctor_id=self.request.user.id)
+            doctor__user_id=self.request.user.id)
 
 
 class ManageAdviceView(viewsets.ModelViewSet):
@@ -30,7 +39,7 @@ class ManageAdviceView(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Advice.objects.all().filter(
-            doctor_id=self.request.user.id)
+            doctor__user_id=self.request.user.id)
 
 
 class ManageMedicineView(viewsets.ModelViewSet):
@@ -39,7 +48,7 @@ class ManageMedicineView(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Medicine.objects.all().filter(
-            doctor_id=self.request.user.id)
+            doctor__user_id=self.request.user.id)
 
 
 class DoctorTurnView(mixins.CreateModelMixin, mixins.ListModelMixin,
@@ -48,7 +57,7 @@ class DoctorTurnView(mixins.CreateModelMixin, mixins.ListModelMixin,
     serializer_class = TurnSerializer
 
     def get_queryset(self):
-        return Turn.objects.all().filter(doctor_id=self.request.user.id)
+        return Turn.objects.all().filter(doctor__user_id=self.request.user.id)
 
 
 class DoctorAppointment(viewsets.ModelViewSet):
@@ -67,70 +76,27 @@ class PatientTurnView(viewsets.ViewSet):
         serializer = DoctorSerializer(queryset, many=True)
         return Response(serializer.data)
 
-    def select_doctor(self, request):
-        if "doctor" in request.data:
-            request.user.actions["doctor"] = request.data["doctor"]
-            request.user.save()
-            return Response(data={"message": "Doctor selected " + request.user.actions["doctor"] + " successfully"},
-                            status=status.HTTP_200_OK)
-        return Response(data={"message": "Doctor not selected"},
-                        status=status.HTTP_400_BAD_REQUEST)
+    def get_doctor(self, request, doctor_pk=None):
+        queryset = get_object_or_404(Doctor.objects.all(), id=doctor_pk)
+        serializer = DoctorSerializer(queryset)
+        return Response(serializer.data)
 
-    def get_doctor(self, request):
-        if "doctor" in request.user.actions:
-            queryset = Doctor.objects.get(id=request.user.actions["doctor"])
-            serializer = DoctorSerializer(queryset)
-            return Response(serializer.data)
-        return Response(data={"message": "Doctor not selected"},
-                        status=status.HTTP_400_BAD_REQUEST)
+    def list_turn(self, request, doctor_pk=None):
+        queryset = Turn.objects.all().filter(doctor_id=doctor_pk)
+        serializer = TurnSerializer(queryset, many=True)
+        return Response(serializer.data)
 
-    def list_turn(self, request):
-        if "doctor" in request.user.actions:
-            queryset = Turn.objects.filter(
-                doctor_id=request.user.actions["doctor"]).filter(patient=None)
-            serializer = TurnSerializer(queryset, many=True)
-            return Response(serializer.data)
-        return Response(data={"message": "Doctor not selected"},
-                        status=status.HTTP_400_BAD_REQUEST)
-
-    def select_turn(self, request):
-        if "doctor" not in request.user.actions:
-            return Response(data={"message": "Doctor not selected"},
-                            status=status.HTTP_400_BAD_REQUEST)
-        if "turn" not in request.data:
-            return Response(data={"message": "Turn not selected"},
-                            status=status.HTTP_400_BAD_REQUEST)
-        request.user.actions["turn"] = request.data["turn"]
-        request.user.save()
-        return Response(data={"message": "Turn selected " + request.user.actions["turn"] + " successfully"},
-                        status=status.HTTP_200_OK)
-
-    def get_turn(self, request):
-        if "doctor" not in request.user.actions:
-            return Response(data={"message": "Doctor not selected"},
-                            status=status.HTTP_400_BAD_REQUEST)
-        if "turn" not in request.user.actions:
-            return Response(data={"message": "Turn not selected"},
-                            status=status.HTTP_400_BAD_REQUEST)
-        queryset = Turn.objects.get(id=request.user.actions["turn"])
+    def get_turn(self, request, doctor_pk=None, turn_pk=None):
+        queryset = get_object_or_404(
+            Turn.objects.all().filter(doctor_id=doctor_pk), id=turn_pk)
         serializer = TurnSerializer(queryset)
         return Response(serializer.data)
 
-    def accept_turn(self, request):
-        if "doctor" not in request.user.actions:
-            return Response(data={"message": "Doctor not selected"},
-                            status=status.HTTP_400_BAD_REQUEST)
-        if "turn" not in request.user.actions:
-            return Response(data={"message": "Turn not selected"},
-                            status=status.HTTP_400_BAD_REQUEST)
-        turn = Turn.objects.get(id=request.user.actions["turn"])
-        turn.patient = request.user
-        turn.accepted = True
-        turn.save()
-        request.user.actions = dict
-        request.user.save()
-        return Response(data={"message": "Selected successfully reserved"},
-                        status=status.HTTP_200_OK)
+    def accept_turn(self, request, doctor_pk=None, turn_pk=None):
+        queryset = get_object_or_404(
+            Turn.objects.all().filter(doctor_id=doctor_pk), id=turn_pk)
+        serializer = TurnSerializer(queryset)
+        return Response(serializer.data)
 
     def get_own_turn(self, request):
         queryset = Turn.objects.all().filter(**request.data, patient_id=request.user.id)
