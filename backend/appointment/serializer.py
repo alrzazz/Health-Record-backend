@@ -84,8 +84,6 @@ class AppointmentSerializer(serializers.ModelSerializer):
         turn.visited = True
         turn.save()
         return super().create(validated_data)
-        # appointment = Appointment.objects.create(**validated_data)
-        # return appointment
 
 
 class AppointmentSerializerRecursive(serializers.ModelSerializer):
@@ -105,3 +103,16 @@ class DoctorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Doctor
         fields = "__all__"
+
+
+class TurnActionSerializer(serializers.Serializer):
+    action = serializers.CharField(required=True)
+
+    def __init__(self, *args, **kwargs):
+        super(TurnActionSerializer, self).__init__(*args, **kwargs)
+
+    def validate(self, data):
+        if data["action"] not in ["accept", "reject"]:
+            raise serializers.ValidationError(
+                "This acion is not valid")
+        return data
