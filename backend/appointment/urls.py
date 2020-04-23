@@ -4,37 +4,26 @@ from rest_framework.routers import DefaultRouter, DynamicRoute
 
 # appointment/...
 
-router = DefaultRouter()
-router.register('advice', views.ManageAdviceView, basename='advice')
-router.register('disease', views.ManageDiseaseView, basename='disease')
-router.register('symptom', views.ManageSymptomView, basename='symptom')
-router.register('medicine', views.ManageMedicineView, basename='medicine')
-router.register('manage', views.DoctorAppointment,
-                basename='appointment-doctor')
-
+doctor_router = DefaultRouter()
+doctor_router.register('advices', views.ManageAdviceView, basename='advice')
+doctor_router.register('diseases', views.ManageDiseaseView, basename='disease')
+doctor_router.register('symptoms', views.ManageSymptomView, basename='symptom')
+doctor_router.register(
+    'medicines', views.ManageMedicineView, basename='medicine')
+doctor_router.register('turns', views.DoctorTurnView, basename='turn-doctor')
+# doctor_router.register('', views.DoctorAppointment,basename='appointment-doctor')
 urlpatterns = [
-    path('doctor/', include(router.urls)),
-    path('doctor/turn/create/',
-         views.DoctorTurnView.as_view({"post": "create_turn"})),
-    path('doctor/turn/list/',
-         views.DoctorTurnView.as_view({"post": "list_turn"})),
-    path('doctor/turn/delete/<pk>/',
-         views.DoctorTurnView.as_view({"delete": "delete_turn"})),
-    path("patient/doctor/list/",
+    path('doctor/', include(doctor_router.urls)),
+    path("patient/doctors/",
          views.PatientTurnView.as_view({"post": "list_doctor"})),
-    path("patient/doctor/select/",
-         views.PatientTurnView.as_view({"post": "select_doctor"})),
-    path("patient/doctor/get/",
+    path("patient/doctors/<doctor_pk>/",
          views.PatientTurnView.as_view({"get": "get_doctor"})),
-    path("patient/turn/list/",
+    path("patient/doctors/<doctor_pk>/turns/",
          views.PatientTurnView.as_view({"get": "list_turn"})),
-    path("patient/turn/select/",
-         views.PatientTurnView.as_view({"post": "select_turn"})),
-    path("patient/turn/accept/",
-         views.PatientTurnView.as_view({"get": "get_turn",
-                                        "post": "accept_turn"})),
-    path("patient/turn/",
+    path("patient/doctors/<doctor_pk>/turns/<turn_pk>/",
+         views.PatientTurnView.as_view({"get": "get_turn", "post": "accept_turn"})),
+    path("patient/turns/",
          views.PatientTurnView.as_view({"post": "get_own_turn"})),
-    path("patient/manage/",
+    path("patient/",
          views.PatientTurnView.as_view({"get": "get_own_appointment"}))
 ]

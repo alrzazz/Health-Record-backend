@@ -5,9 +5,9 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 # auth/...
 
-manage_router = DefaultRouter()
-manage_router.register('doctor', views.ManageDoctorsView)
-manage_router.register('patient', views.ManagePatientsView)
+manager_router = DefaultRouter()
+manager_router.register('doctors', views.ManageDoctorsView)
+manager_router.register('patients', views.ManagePatientsView)
 
 urlpatterns = [
     path('login/', TokenObtainPairView.as_view(), name="login-user"),
@@ -17,5 +17,5 @@ urlpatterns = [
     path('logout/', views.UserLogoutView.as_view(), name="logout-user"),
     path('change-password/', views.UserChangePasswordView.as_view(),
          name="logout-user"),
-    path('manage/', include(manage_router.urls))
+    path('manager/', include(manager_router.urls))
 ]
