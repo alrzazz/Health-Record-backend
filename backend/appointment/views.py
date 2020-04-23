@@ -82,28 +82,50 @@ class PatientTurnView(viewsets.ViewSet):
         return Response(serializer.data)
 
     def list_turn(self, request, doctor_pk=None):
-        queryset = Turn.objects.all().filter(doctor_id=doctor_pk)
+        queryset = Turn.objects.all().filter(doctor_id=doctor_pk, accepted=False)
         serializer = TurnSerializer(queryset, many=True)
         return Response(serializer.data)
 
     def get_turn(self, request, doctor_pk=None, turn_pk=None):
         queryset = get_object_or_404(
-            Turn.objects.all().filter(doctor_id=doctor_pk), id=turn_pk)
+            Turn.objects.all().filter(doctor_id=doctor_pk, accepted=False), id=turn_pk)
         serializer = TurnSerializer(queryset)
         return Response(serializer.data)
 
     def accept_turn(self, request, doctor_pk=None, turn_pk=None):
-        queryset = get_object_or_404(
+        serializer = TurnActionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        instance = get_object_or_404(
             Turn.objects.all().filter(doctor_id=doctor_pk), id=turn_pk)
-        serializer = TurnSerializer(queryset)
-        return Response(serializer.data)
+
+        if request.data["action"] == "accept":
+            if instance.accepted:
+                return Response(data={"message": "You can't perform this action."},
+                                status=status.HTTP_406_NOT_ACCEPTABLE)
+            instance.accepted = True
+            instance.patient = Patient.objects.get(user_id=request.user.id)
+            instance.save()
+
+        if request.data["action"] == "reject":
+            if not instance.accepted or instance.patient.user.id != request.user.id:
+                return Response(data={"message": "You can't perform this action."},
+                                status=status.HTTP_406_NOT_ACCEPTABLE)
+
+            instance.accepted = False
+            instance.patient = None
+            instance.save()
+
+        return Response(data={"message": "Your turn "+request.data["action"]+"ed successfully."},
+                        status=status.HTTP_202_ACCEPTED)
 
     def get_own_turn(self, request):
-        queryset = Turn.objects.all().filter(**request.data, patient_id=request.user.id)
+        queryset = Turn.objects.all().filter(
+            **request.data, patient__user_id=request.user.id)
         serializer = TurnSerializer(queryset, many=True)
         return Response(serializer.data)
 
     def get_own_appointment(self, request):
-        queryset = Appointment.objects.filter(turn__patient_id=request.user.id)
+        queryset = Appointment.objects.filter(
+            turn__patient__user_id=request.user.id)
         serializer = AppointmentSerializerRecursive(queryset, many=True)
         return Response(serializer.data)
