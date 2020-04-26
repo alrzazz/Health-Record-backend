@@ -83,14 +83,6 @@ class PatientSerializer(serializers.ModelSerializer):
         return instance
 
 
-class PatientProfileSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
-
-    class Meta:
-        model = Patient
-        fields = "__all__"
-
-
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
     new_password1 = serializers.CharField(required=True)

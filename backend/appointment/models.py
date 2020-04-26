@@ -1,5 +1,7 @@
 from django.db import models
 from account.models import Doctor, Patient
+from django.core.validators import MinLengthValidator, MinValueValidator
+import datetime
 
 
 class Turn(models.Model):
@@ -19,7 +21,9 @@ class Turn(models.Model):
 class Symptom(models.Model):
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
     kind = models.IntegerField(default=0)
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=50, unique=True, error_messages={
+        'unique': ("This symptom already exist."),
+    })
     value = models.FloatField()
 
     def __str__(self):
@@ -28,7 +32,9 @@ class Symptom(models.Model):
 
 class Disease(models.Model):
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=50, unique=True, error_messages={
+        'unique': ("This disease already exist."),
+    })
 
     def __str__(self):
         return self.name
@@ -36,7 +42,9 @@ class Disease(models.Model):
 
 class Advice(models.Model):
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=50, unique=True, error_messages={
+        'unique': ("This advice already exist."),
+    })
     description = models.TextField()
 
     def __str__(self):
@@ -45,7 +53,9 @@ class Advice(models.Model):
 
 class Medicine(models.Model):
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=50, unique=True, error_messages={
+        'unique': ("This medicine already exist."),
+    })
     duration = models.DurationField()
 
     def __str__(self):
