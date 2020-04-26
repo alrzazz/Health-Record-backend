@@ -44,6 +44,8 @@ class DoctorSerializer(serializers.ModelSerializer):
             "last_name", instance.last_name)
         instance.phone_number = validated_data.get(
             "phone_number", instance.phone_number)
+        instance.mobile_number = validated_data.get(
+            "mobile_number", instance.mobile_number)
         instance.address = validated_data.get("address", instance.address)
         instance.bio = validated_data.get("bio", instance.bio)
         instance.avatar = validated_data.get("avatar", instance.avatar)
@@ -89,6 +91,10 @@ class ChangePasswordSerializer(serializers.Serializer):
     new_password2 = serializers.CharField(required=True)
 
     def validate(self, data):
+        if len(data["new_password1"]) < 6:
+            raise serializers.ValidationError(
+                "This password is too short, your password at least 6 character"
+            )
         if data["new_password1"] != data["new_password2"]:
             raise serializers.ValidationError(
                 "confirmation password not match")

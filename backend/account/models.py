@@ -28,7 +28,7 @@ class User(AbstractBaseUser, PermissionsMixin):
             'unique': _("A user with that username already exists."),
         },
     )
-    email = models.EmailField(_('email address'), unique=True, blank=True, error_messages={
+    email = models.EmailField(_('email address'), blank=True, error_messages={
         'unique': ("A user with that email already exists."),
     })
     role = models.PositiveSmallIntegerField(
@@ -88,7 +88,7 @@ class Patient(models.Model):
 
     birth_date = models.DateField()
     avatar = models.ImageField(
-        upload_to="avatar/", default="../media/avatar.png")
+        upload_to="avatar/", default="../media/avatar.svg")
     gender = models.PositiveSmallIntegerField(
         choices=GENDERS)
 
@@ -109,6 +109,9 @@ class Doctor(models.Model):
     phone_number = models.CharField(max_length=150, validators=[RegexValidator(
         regex=r'^([0-9]{3})-([0-9]{8})$', message="Phone number must include English numbers and format of XXX-XXXXXXXX ")])
 
+    mobile_number = models.CharField(
+        max_length=150, validators=[RegexValidator(regex=r'^091[0-9]{8}$', message="Mobile number must be 091XXXXXXXX")])
+
     address = models.TextField(max_length=400, validators=[
                                MinLengthValidator(limit_value=10)])
 
@@ -120,7 +123,7 @@ class Doctor(models.Model):
     bio = models.TextField(max_length=500, blank=True)
 
     avatar = models.ImageField(
-        upload_to="avatar/", default="../media/avatar.png")
+        upload_to="avatar/", default="../media/avatar.svg")
 
     gender = models.PositiveSmallIntegerField(
         choices=GENDERS)
