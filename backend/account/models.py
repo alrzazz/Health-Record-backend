@@ -81,7 +81,7 @@ class Patient(models.Model):
                                  MinLengthValidator(limit_value=3)])
 
     mobile_number = models.CharField(
-        max_length=150, validators=[RegexValidator(regex=r'^091[0-9]{8}$', message="Mobile number must be 091XXXXXXXX")])
+        max_length=150, validators=[RegexValidator(regex=r'^09[0-9]{9}$', message="Mobile number must be 09XXXXXXXXX")])
 
     address = models.TextField(max_length=400, validators=[
                                MinLengthValidator(limit_value=10)])
@@ -109,8 +109,8 @@ class Doctor(models.Model):
     phone_number = models.CharField(max_length=150, validators=[RegexValidator(
         regex=r'^([0-9]{3})-([0-9]{8})$', message="Phone number must include English numbers and format of XXX-XXXXXXXX ")])
 
-    mobile_number = models.CharField(
-        max_length=150, validators=[RegexValidator(regex=r'^091[0-9]{8}$', message="Mobile number must be 091XXXXXXXX")])
+    mobile_number = models.CharField(blank=True,
+                                     max_length=150, validators=[RegexValidator(regex=r'^09[0-9]{9}$', message="Mobile number must be 09XXXXXXXXX")])
 
     address = models.TextField(max_length=400, validators=[
                                MinLengthValidator(limit_value=10)])
