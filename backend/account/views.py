@@ -23,37 +23,20 @@ class RetrieveUserView(generics.RetrieveAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, format='json'):
-        serializer = RetrieveUserSerializer(request.user)
+        serializer = UserSerializer(request.user)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
 
-class ProfileView(generics.RetrieveAPIView, generics.UpdateAPIView):
+class ProfileView(generics.RetrieveUpdateAPIView):
     permission_classes = [NotManager]
 
-    def get(self, request):
-        if request.user.role == 1:
-            serializer = DoctorSerializer(
-                Doctor.objects.all().get(user_id=request.user.id))
-            return Response(data=serializer.data, status=status.HTTP_200_OK)
-        if request.user.role == 2:
-            serializer = PatientSerializer(
-                Patient.objects.all().get(user_id=request.user.id))
-            return Response(data=serializer.data, status=status.HTTP_200_OK)
+    def get_serializer_class(self):
+        return DoctorSerializer if self.request.user.role == 1 else PatientSerializer
 
-    def put(self, request):
-        if request.user.role == 1:
-            instance = Doctor.objects.all().get(user_id=request.user.id)
-            serializer = DoctorSerializer(instance)
-            serializer.update(instance, request.data)
-            return Response(data=serializer.data, status=status.HTTP_200_OK)
-        if request.user.role == 2:
-            instance = Patient.objects.all().get(user_id=request.user.id)
-            serializer = PatientSerializer(instance)
-            serializer.update(instance, request.data)
-            return Response(data=serializer.data, status=status.HTTP_200_OK)
-
-    def patch(self, request):
-        return self.put(request)
+    def get_object(self):
+        if self.request.user.role == 1:
+            return Doctor.objects.get(user_id=self.request.user.id)
+        return Patient.objects.get(user_id=self.request.user.id)
 
 
 class ManageDoctorsView(viewsets.ModelViewSet):
@@ -61,6 +44,17 @@ class ManageDoctorsView(viewsets.ModelViewSet):
     queryset = Doctor.objects.all()
     serializer_class = DoctorSerializer
     pagination_class = ItemlimitPgination
+
+    def partial_update(self, request, *args, **kwargs):
+        if "user" in request.data:
+            request_user = request.data.pop("user")
+            instance_user = self.get_object().user
+            serializer = UserSerializer(
+                instance_user, data=request_user, partial=True)
+            if(not serializer.is_valid()):
+                raise serializers.ValidationError
+            serializer.save()
+        return super().partial_update(request, *args, **kwargs)
 
     def update(self, request, pk=None):
         raise exceptions.MethodNotAllowed(request.method)
@@ -71,6 +65,17 @@ class ManagePatientsView(viewsets.ModelViewSet):
     queryset = Patient.objects.all()
     serializer_class = PatientSerializer
     pagination_class = ItemlimitPgination
+
+    def partial_update(self, request, *args, **kwargs):
+        if "user" in request.data:
+            request_user = request.data.pop("user")
+            instance_user = self.get_object().user
+            serializer = UserSerializer(
+                instance_user, data=request_user, partial=True)
+            if(not serializer.is_valid()):
+                raise serializers.ValidationError
+            serializer.save()
+        return super().partial_update(request, *args, **kwargs)
 
     def update(self, request, pk=None):
         raise exceptions.MethodNotAllowed(request.method)
