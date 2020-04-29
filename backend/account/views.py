@@ -45,40 +45,12 @@ class ManageDoctorsView(viewsets.ModelViewSet):
     serializer_class = DoctorSerializer
     pagination_class = ItemlimitPgination
 
-    def partial_update(self, request, *args, **kwargs):
-        if "user" in request.data:
-            request_user = request.data.pop("user")
-            instance_user = self.get_object().user
-            serializer = UserSerializer(
-                instance_user, data=request_user, partial=True)
-            if(not serializer.is_valid()):
-                raise serializers.ValidationError
-            serializer.save()
-        return super().partial_update(request, *args, **kwargs)
-
-    def update(self, request, pk=None):
-        raise exceptions.MethodNotAllowed(request.method)
-
 
 class ManagePatientsView(viewsets.ModelViewSet):
     permission_classes = [IsManager]
     queryset = Patient.objects.all()
     serializer_class = PatientSerializer
     pagination_class = ItemlimitPgination
-
-    def partial_update(self, request, *args, **kwargs):
-        if "user" in request.data:
-            request_user = request.data.pop("user")
-            instance_user = self.get_object().user
-            serializer = UserSerializer(
-                instance_user, data=request_user, partial=True)
-            if(not serializer.is_valid()):
-                raise serializers.ValidationError
-            serializer.save()
-        return super().partial_update(request, *args, **kwargs)
-
-    def update(self, request, pk=None):
-        raise exceptions.MethodNotAllowed(request.method)
 
 
 class UserChangePasswordView(generics.UpdateAPIView):
@@ -87,10 +59,10 @@ class UserChangePasswordView(generics.UpdateAPIView):
     def update(self, request):
         serializer = ChangePasswordSerializer(data=request.data)
         if serializer.is_valid():
-            user_ins = User.objects.get(pk=request.user.id)
-            if not user_ins.check_password(serializer.data.get("old_password1")):
+            user_ins = request.user
+            if not user_ins.check_password(serializer.data.get("old_password")):
                 return Response({"old_password": ["Wrong password."]}, status=status.HTTP_400_BAD_REQUEST)
-            user_ins.set_password(serializer.data.get("new_password"))
+            user_ins.set_password(serializer.data.get("new_password1"))
             user_ins.save()
 
             return Response(data={'message': 'Password updated successfully'}, status=status.HTTP_200_OK)
