@@ -5,6 +5,7 @@ from rest_framework import viewsets, mixins, status, views
 from rest_framework.response import Response
 from django.http import Http404
 from django.shortcuts import get_object_or_404 as _get_object_or_404
+from .pagination import ItemlimitPgination
 
 
 def get_object_or_404(queryset, *filter_args, **filter_kwargs):
@@ -55,6 +56,7 @@ class DoctorTurnView(mixins.CreateModelMixin, mixins.ListModelMixin,
                      mixins.DestroyModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     permission_classes = [IsDoctor]
     serializer_class = TurnSerializer
+    pagination_class = ItemlimitPgination
 
     def get_queryset(self):
         return Turn.objects.all().filter(doctor__user_id=self.request.user.id)
