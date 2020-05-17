@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from .serializer import *
 import json
 from .pagination import ItemlimitPgination
+from rest_framework.filters import SearchFilter, OrderingFilter
 
 
 class UserLogoutView(generics.CreateAPIView):
@@ -44,6 +45,9 @@ class ManageDoctorsView(viewsets.ModelViewSet):
     queryset = Doctor.objects.all()
     serializer_class = DoctorSerializer
     pagination_class = ItemlimitPgination
+    search_fields = ["first_name", "last_name", "speciality"]
+    filter_backends = [SearchFilter, OrderingFilter]
+    ordering_fields = ["first_name", "last_name"]
 
 
 class ManagePatientsView(viewsets.ModelViewSet):
@@ -51,6 +55,9 @@ class ManagePatientsView(viewsets.ModelViewSet):
     queryset = Patient.objects.all()
     serializer_class = PatientSerializer
     pagination_class = ItemlimitPgination
+    search_fields = ["first_name", "last_name", "speciality"]
+    filter_backends = [SearchFilter, OrderingFilter]
+    ordering_fields = ["first_name", "last_name"]
 
 
 class UserChangePasswordView(generics.UpdateAPIView):
