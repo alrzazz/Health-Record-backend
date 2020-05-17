@@ -1,6 +1,8 @@
 from rest_framework import serializers
-from .models import Turn, Symptom, Disease, Advice, Medicine, Appointment
+from .models import Calendar, Symptom, Disease, Advice, Medicine, Appointment
 from account.models import Doctor, Patient
+from account.serializer import DoctorSerializer, PatientSerializer
+import datetime
 
 
 class SymptomSerializer(serializers.ModelSerializer):
@@ -10,9 +12,9 @@ class SymptomSerializer(serializers.ModelSerializer):
         extra_kwargs = {'doctor': {'read_only': True}}
 
     def create(self, validated_data):
-        symptom = Symptom.objects.create(
-            **validated_data, doctor=Doctor.objects.get(user_id=self.context['request'].user.id))
-        return symptom
+        doctor = Doctor.objects.get(user_id=self.context['request'].user.id)
+        validated_data["doctor_id"] = doctor.id
+        return super().create(validated_data)
 
 
 class DiseaseSerializer(serializers.ModelSerializer):
@@ -22,9 +24,9 @@ class DiseaseSerializer(serializers.ModelSerializer):
         extra_kwargs = {'doctor': {'read_only': True}}
 
     def create(self, validated_data):
-        disease = Disease.objects.create(
-            **validated_data, doctor=Doctor.objects.get(user_id=self.context['request'].user.id))
-        return disease
+        doctor = Doctor.objects.get(user_id=self.context['request'].user.id)
+        validated_data["doctor_id"] = doctor.id
+        return super().create(validated_data)
 
 
 class AdviceSerializer(serializers.ModelSerializer):
@@ -34,9 +36,9 @@ class AdviceSerializer(serializers.ModelSerializer):
         extra_kwargs = {'doctor': {'read_only': True}}
 
     def create(self, validated_data):
-        advice = Advice.objects.create(
-            **validated_data, doctor=Doctor.objects.get(user_id=self.context['request'].user.id))
-        return advice
+        doctor = Doctor.objects.get(user_id=self.context['request'].user.id)
+        validated_data["doctor_id"] = doctor.id
+        return super().create(validated_data)
 
 
 class MedicineSerializer(serializers.ModelSerializer):
@@ -46,22 +48,47 @@ class MedicineSerializer(serializers.ModelSerializer):
         extra_kwargs = {'doctor': {'read_only': True}}
 
     def create(self, validated_data):
-        medicine = Medicine.objects.create(
-            **validated_data, doctor=Doctor.objects.get(user_id=self.context['request'].user.id))
-        return medicine
+        doctor = Doctor.objects.get(user_id=self.context['request'].user.id)
+        validated_data["doctor_id"] = doctor.id
+        return super().create(validated_data)
 
 
-class TurnSerializer(serializers.ModelSerializer):
+class CalendarSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Turn
-        fields = "__all__"
-        extra_kwargs = {'doctor': {'read_only': True},
-                        'patient': {'read_only': True},
-                        'accepted': {'read_only': True},
-                        'visited': {'read_only': True}}
+        model = Calendar
+        fields = ["id", "day", "start_time", "remained", "total"]
+        extra_kwargs = {
+            'remained': {'read_only': True}
+        }
 
     def create(self, validated_data):
-        return Turn.objects.create(**validated_data, doctor=Doctor.objects.get(user_id=self.context['request'].user.id))
+        doctor = Doctor.objects.get(user_id=self.context['request'].user.id)
+        validated_data["doctor_id"] = doctor.id
+        validated_data["remained"] = validated_data["total"]
+        return super().create(validated_data)
+
+    def validate(self, data):
+        if data["day"] < datetime.date.today() + datetime.timedelta(days=1):
+            raise serializers.ValidationError(
+                "You can make turn at least for next 24 hours from now.")
+        if data["day"] > datetime.date.today() + datetime.timedelta(weeks=3):
+            raise serializers.ValidationError(
+                "You can't make turn for after next 3 weeks in future.")
+        return data
+
+
+class DoctorField(serializers.StringRelatedField):
+    def to_representation(self, value):
+        return value.first_name + " " + value.last_name
+
+
+class PatientCalendarSerializer(serializers.ModelSerializer):
+    doctor = DoctorField()
+    speciality = serializers.ReadOnlyField(source="doctor.speciality")
+
+    class Meta:
+        model = Calendar
+        fields = ["day", "start_time", "remained", "doctor", "speciality"]
 
 
 class AppointmentSerializer(serializers.ModelSerializer):
@@ -89,7 +116,8 @@ class AppointmentSerializer(serializers.ModelSerializer):
 
 
 class AppointmentSerializerRecursive(serializers.ModelSerializer):
-    turn = TurnSerializer(read_only=True)
+    patient = PatientSerializer(read_only=True)
+    doctor = DoctorSerializer(read_only=True)
     advices = AdviceSerializer(many=True)
     symptoms = SymptomSerializer(many=True)
     medicines = MedicineSerializer(many=True)
