@@ -3,4 +3,4 @@ from rest_framework.pagination import LimitOffsetPagination, PageNumberPaginatio
 
 class ItemlimitPgination(LimitOffsetPagination):
     # page_size = 2
-    default_limit = 2
+    default_limit = 5

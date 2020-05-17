@@ -28,7 +28,7 @@ class User(AbstractBaseUser, PermissionsMixin):
             'unique': _("A user with that username already exists."),
         },
     )
-    email = models.EmailField(_('email address'), blank=True, error_messages={
+    email = models.EmailField(_('email address'), error_messages={
         'unique': ("A user with that email already exists."),
     })
     role = models.PositiveSmallIntegerField(
