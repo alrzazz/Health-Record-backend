@@ -69,36 +69,35 @@ class ManageMedicineView(viewsets.ModelViewSet):
             doctor__user_id=self.request.user.id)
 
 
-class DoctorTurnView(mixins.CreateModelMixin, mixins.ListModelMixin,
-                     mixins.DestroyModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+class DoctorCalendarView(viewsets.ModelViewSet):
     permission_classes = [IsDoctor]
-    serializer_class = TurnSerializer
+    serializer_class = CalendarSerializer
     pagination_class = ItemlimitPgination
+    filter_backends = [OrderingFilter]
+    ordering_fields = ["day", "start_time"]
+    queryset = Calendar.objects.all()
+
+    def update(self, request, pk=None):
+        response = {'message': 'Update function is not offered in this path.'}
+        return Response(response, status=status.HTTP_403_FORBIDDEN)
+
+    def partial_update(self, request, pk=None):
+        response = {'message': 'Update function is not offered in this path.'}
+        return Response(response, status=status.HTTP_403_FORBIDDEN)
 
     def get_queryset(self):
-        return Turn.objects.all().filter(doctor__user_id=self.request.user.id)
+        queryset = super().get_queryset()
 
+        queryset = queryset.filter(doctor__user_id=self.request.user.id)
 
-class DoctorAppointment(viewsets.ModelViewSet):
-    permission_classes = [IsDoctor]
-    serializer_class = AppointmentSerializer
+        start = self.request.query_params.get("start")
+        queryset = queryset.filter(
+            day__gte=start) if start != None else queryset
 
-    def get_queryset(self):
-        return Appointment.objects.all().filter(turn__doctor_id=self.request.user.id)
+        end = self.request.query_params.get("end")
+        queryset = queryset.filter(day__lte=end) if end != None else queryset
 
-
-class PatientTurnView(viewsets.ViewSet):
-    permission_classes = [IsPatient]
-
-    def list_doctor(self, request):
-        queryset = Doctor.objects.all().filter(**request.data)
-        serializer = DoctorSerializer(queryset, many=True)
-        return Response(serializer.data)
-
-    def get_doctor(self, request, doctor_pk=None):
-        queryset = get_object_or_404(Doctor.objects.all(), id=doctor_pk)
-        serializer = DoctorSerializer(queryset)
-        return Response(serializer.data)
+        return queryset
 
     def list_turn(self, request, doctor_pk=None):
         queryset = Turn.objects.all().filter(doctor_id=doctor_pk, accepted=False)
