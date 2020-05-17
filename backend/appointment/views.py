@@ -1,11 +1,12 @@
 from account.permissions import IsDoctor, IsPatient
 from .models import *
 from .serializer import *
-from rest_framework import viewsets, mixins, status, views
+from rest_framework import viewsets, mixins, status, views, generics
 from rest_framework.response import Response
 from django.http import Http404
 from django.shortcuts import get_object_or_404 as _get_object_or_404
 from .pagination import ItemlimitPgination
+from rest_framework.filters import SearchFilter, OrderingFilter
 
 
 def get_object_or_404(queryset, *filter_args, **filter_kwargs):
@@ -18,6 +19,10 @@ def get_object_or_404(queryset, *filter_args, **filter_kwargs):
 class ManageSymptomView(viewsets.ModelViewSet):
     permission_classes = [IsDoctor]
     serializer_class = SymptomSerializer
+    pagination_class = ItemlimitPgination
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ["name"]
+    ordering_fields = ["name"]
 
     def get_queryset(self):
         return Symptom.objects.all().filter(
@@ -27,6 +32,10 @@ class ManageSymptomView(viewsets.ModelViewSet):
 class ManageDiseaseView(viewsets.ModelViewSet):
     permission_classes = [IsDoctor]
     serializer_class = DiseaseSerializer
+    pagination_class = ItemlimitPgination
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ["name"]
+    ordering_fields = ["name"]
 
     def get_queryset(self):
         self.get_object
@@ -37,6 +46,10 @@ class ManageDiseaseView(viewsets.ModelViewSet):
 class ManageAdviceView(viewsets.ModelViewSet):
     permission_classes = [IsDoctor]
     serializer_class = AdviceSerializer
+    pagination_class = ItemlimitPgination
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ["name"]
+    ordering_fields = ["name"]
 
     def get_queryset(self):
         return Advice.objects.all().filter(
@@ -46,6 +59,10 @@ class ManageAdviceView(viewsets.ModelViewSet):
 class ManageMedicineView(viewsets.ModelViewSet):
     permission_classes = [IsDoctor]
     serializer_class = MedicineSerializer
+    pagination_class = ItemlimitPgination
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ["name"]
+    ordering_fields = ["name"]
 
     def get_queryset(self):
         return Medicine.objects.all().filter(
