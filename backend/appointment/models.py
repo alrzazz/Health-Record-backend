@@ -4,18 +4,16 @@ from django.core.validators import MinLengthValidator, MinValueValidator
 import datetime
 
 
-class Turn(models.Model):
+class Calendar(models.Model):
     doctor = models.ForeignKey(
-        Doctor, on_delete=models.CASCADE, related_name="doctor_turn")
-    patient = models.ForeignKey(
-        Patient, on_delete=models.CASCADE, related_name="patient_turn", null=True)
-    start_time = models.DateTimeField()
-    end_time = models.DateTimeField()
-    accepted = models.BooleanField(default=False)
-    visited = models.BooleanField(default=False)
+        Doctor, on_delete=models.CASCADE, related_name="calendar_doctor")
+    day = models.DateField()
+    start_time = models.TimeField()
+    total = models.IntegerField()
+    remained = models.IntegerField()
 
     def __str__(self):
-        return "{}- {} to {}".format(self.id, self.start_time, self.end_time)
+        return "{} date={}  remained={}".format(self.doctor, self.remained)
 
 
 class Symptom(models.Model):
@@ -63,11 +61,16 @@ class Medicine(models.Model):
 
 
 class Appointment(models.Model):
-    turn = models.OneToOneField(Turn, on_delete=models.CASCADE)
-    symptoms = models.ManyToManyField(Symptom)
-    disease = models.ManyToManyField(Disease)
-    advices = models.ManyToManyField(Advice)
-    medicines = models.ManyToManyField(Medicine)
+    start_time = models.DateTimeField()
+    turn = models.IntegerField()
+    doctor = models.ForeignKey(
+        Doctor, on_delete=models.CASCADE, related_name="appointment_doctor")
+    Patient = models.ForeignKey(
+        Patient, on_delete=models.CASCADE, related_name="appointment_doctor")
+    symptoms = models.ManyToManyField(Symptom, blank=True)
+    disease = models.ManyToManyField(Disease, blank=True)
+    advices = models.ManyToManyField(Advice, blank=True)
+    medicines = models.ManyToManyField(Medicine, blank=True)
 
     def __str__(self):
         return self.turn.__str__()
