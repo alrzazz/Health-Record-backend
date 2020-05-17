@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from django.http import Http404
 from django.shortcuts import get_object_or_404 as _get_object_or_404
 from .pagination import ItemlimitPgination
+import datetime
 from rest_framework.filters import SearchFilter, OrderingFilter
 
 
@@ -116,34 +117,27 @@ class DoctorCalendarView(viewsets.ModelViewSet):
         instance = get_object_or_404(
             Turn.objects.all().filter(doctor_id=doctor_pk), id=turn_pk)
 
-        if request.data["action"] == "accept":
-            if instance.accepted:
-                return Response(data={"message": "You can't perform this action."},
-                                status=status.HTTP_406_NOT_ACCEPTABLE)
-            instance.accepted = True
-            instance.patient = Patient.objects.get(user_id=request.user.id)
-            instance.save()
+class PatientListTurnView(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.RetrieveModelMixin):
+    permission_classes = [IsPatient]
+    pagination_class = ItemlimitPgination
+    serializer_class = PatientCalendarSerializer
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ["doctor__first_name",
+                     "doctor__last_name", "doctor__speciality"]
+    ordering_fields = ["day", "start_time"]
+    queryset = Calendar.objects.all()
 
-        if request.data["action"] == "reject":
-            if not instance.accepted or instance.patient.user.id != request.user.id:
-                return Response(data={"message": "You can't perform this action."},
-                                status=status.HTTP_406_NOT_ACCEPTABLE)
+    def get_queryset(self):
+        queryset = super().get_queryset()
 
-            instance.accepted = False
-            instance.patient = None
-            instance.save()
+        queryset = queryset.filter(
+            day__gte=datetime.date.today() + datetime.timedelta(days=1), remained__gt=0)
 
-        return Response(data={"message": "Your turn "+request.data["action"]+"ed successfully."},
-                        status=status.HTTP_202_ACCEPTED)
+        start = self.request.query_params.get("start")
+        queryset = queryset.filter(
+            day__gte=start) if start != None else queryset
 
-    def get_own_turn(self, request):
-        queryset = Turn.objects.all().filter(
-            **request.data, patient__user_id=request.user.id)
-        serializer = TurnSerializer(queryset, many=True)
-        return Response(serializer.data)
+        end = self.request.query_params.get("end")
+        queryset = queryset.filter(day__lte=end) if end != None else queryset
 
-    def get_own_appointment(self, request):
-        queryset = Appointment.objects.filter(
-            turn__patient__user_id=request.user.id)
-        serializer = AppointmentSerializerRecursive(queryset, many=True)
-        return Response(serializer.data)
+        return queryset
