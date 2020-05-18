@@ -100,24 +100,16 @@ class DoctorCalendarView(viewsets.ModelViewSet):
 
         return queryset
 
-    def list_turn(self, request, doctor_pk=None):
-        queryset = Turn.objects.all().filter(doctor_id=doctor_pk, accepted=False)
-        serializer = TurnSerializer(queryset, many=True)
-        return Response(serializer.data)
 
-    def get_turn(self, request, doctor_pk=None, turn_pk=None):
-        queryset = get_object_or_404(
-            Turn.objects.all().filter(doctor_id=doctor_pk, accepted=False), id=turn_pk)
-        serializer = TurnSerializer(queryset)
-        return Response(serializer.data)
+class DoctorAppointmentView(viewsets.ModelViewSet):
+    permission_classes = [IsDoctor]
+    serializer_class = AppointmentSerializer
 
-    def accept_turn(self, request, doctor_pk=None, turn_pk=None):
-        serializer = TurnActionSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        instance = get_object_or_404(
-            Turn.objects.all().filter(doctor_id=doctor_pk), id=turn_pk)
+    def get_queryset(self):
+        return Appointment.objects.all().filter(doctor__user_id=self.request.user.id)
 
-class PatientListTurnView(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.RetrieveModelMixin):
+
+class PatientListTurnView(viewsets.ModelViewSet):
     permission_classes = [IsPatient]
     pagination_class = ItemlimitPgination
     serializer_class = PatientCalendarSerializer
@@ -141,3 +133,28 @@ class PatientListTurnView(viewsets.GenericViewSet, mixins.ListModelMixin, mixins
         queryset = queryset.filter(day__lte=end) if end != None else queryset
 
         return queryset
+
+    def update(self, request, pk=None):
+        response = {'message': 'Update function is not offered in this path.'}
+        return Response(response, status=status.HTTP_403_FORBIDDEN)
+
+    def partial_update(self, request, pk=None):
+        response = {'message': 'Update function is not offered in this path.'}
+        return Response(response, status=status.HTTP_403_FORBIDDEN)
+
+    def create(self, request):
+        serializer = TurnReserveSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        action = request.data.get("action")
+        calendar_id = request.data.get("calendar_id")
+        print(action)
+        if action == "accept":
+            calendar = get_object_or_404(self.get_queryset(), id=calendar_id)
+            turn = calendar.total - calendar.remained + 1
+            patient = Patient.objects.get(user__id=self.request.user.id)
+            Appointment.objects.create(
+                calendar=calendar, turn=turn, patient=patient)
+            calendar.remained -= 1
+            calendar.save()
+            return Response(data={"message": "Your Turn reserved"}, status=status.HTTP_200_OK)
+        return Response(data={"message": "Turn not reserved"}, status=status.HTTP_400_BAD_REQUEST)

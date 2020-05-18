@@ -88,7 +88,8 @@ class PatientCalendarSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Calendar
-        fields = ["day", "start_time", "remained", "doctor", "speciality"]
+        fields = ["id", "day", "start_time", "remained",
+                  "doctor", "speciality", "doctor_id"]
 
 
 class AppointmentSerializer(serializers.ModelSerializer):
@@ -135,14 +136,7 @@ class DoctorSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class TurnActionSerializer(serializers.Serializer):
-    action = serializers.CharField(required=True)
-
-    def __init__(self, *args, **kwargs):
-        super(TurnActionSerializer, self).__init__(*args, **kwargs)
-
-    def validate(self, data):
-        if data["action"] not in ["accept", "reject"]:
-            raise serializers.ValidationError(
-                "This acion is not valid")
-        return data
+class TurnReserveSerializer(serializers.Serializer):
+    action = serializers.MultipleChoiceField(
+        choices=["accept", "reject"], required=True)
+    calendar_id = serializers.IntegerField(required=True)
