@@ -10,21 +10,15 @@ doctor_router.register('diseases', views.ManageDiseaseView, basename='disease')
 doctor_router.register('symptoms', views.ManageSymptomView, basename='symptom')
 doctor_router.register(
     'medicines', views.ManageMedicineView, basename='medicine')
-doctor_router.register('turns', views.DoctorTurnView, basename='turn-doctor')
-doctor_router.register('all', views.DoctorAppointment,
+doctor_router.register('calendar', views.DoctorCalendarView,
+                       basename='calendar-doctor')
+doctor_router.register('all', views.DoctorAppointmentView,
                        basename='appointment-doctor')
+
+patient_router = DefaultRouter()
+patient_router.register('turns', views.PatientListTurnView, basename='turns')
+
 urlpatterns = [
     path('doctor/', include(doctor_router.urls)),
-    path("patient/doctors/",
-         views.PatientTurnView.as_view({"post": "list_doctor"})),
-    path("patient/doctors/<doctor_pk>/",
-         views.PatientTurnView.as_view({"get": "get_doctor"})),
-    path("patient/doctors/<doctor_pk>/turns/",
-         views.PatientTurnView.as_view({"get": "list_turn"})),
-    path("patient/doctors/<doctor_pk>/turns/<turn_pk>/",
-         views.PatientTurnView.as_view({"get": "get_turn", "post": "accept_turn"})),
-    path("patient/turns/",
-         views.PatientTurnView.as_view({"get": "get_own_turn"})),
-    path("patient/",
-         views.PatientTurnView.as_view({"get": "get_own_appointment"}))
+    path('patient/', include(patient_router.urls)),
 ]
