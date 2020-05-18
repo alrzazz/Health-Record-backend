@@ -93,7 +93,7 @@ class Patient(models.Model):
         choices=GENDERS)
 
     def __str__(self):
-        return "{0} : {1} {2}".format(self.user.username, self.first_name, self.last_name)
+        return str(self.id)
 
 
 class Doctor(models.Model):
@@ -129,4 +129,4 @@ class Doctor(models.Model):
         choices=GENDERS)
 
     def __str__(self):
-        return "{0} : {1} {2}".format(self.user.username, self.first_name, self.last_name)
+        return str(self.id)

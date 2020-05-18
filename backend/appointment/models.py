@@ -13,7 +13,7 @@ class Calendar(models.Model):
     remained = models.IntegerField()
 
     def __str__(self):
-        return "{} date={}  remained={}".format(self.doctor, self.remained)
+        return str(self.id)
 
 
 class Symptom(models.Model):
@@ -61,16 +61,15 @@ class Medicine(models.Model):
 
 
 class Appointment(models.Model):
-    start_time = models.DateTimeField()
+    calendar = models.ForeignKey(Calendar, on_delete=models.CASCADE)
+    patient = models.ForeignKey(
+        Patient, on_delete=models.CASCADE, related_name="appointment_patient")
+    done = models.BooleanField(default=False)
     turn = models.IntegerField()
-    doctor = models.ForeignKey(
-        Doctor, on_delete=models.CASCADE, related_name="appointment_doctor")
-    Patient = models.ForeignKey(
-        Patient, on_delete=models.CASCADE, related_name="appointment_doctor")
     symptoms = models.ManyToManyField(Symptom, blank=True)
     disease = models.ManyToManyField(Disease, blank=True)
     advices = models.ManyToManyField(Advice, blank=True)
     medicines = models.ManyToManyField(Medicine, blank=True)
 
     def __str__(self):
-        return self.turn.__str__()
+        return str(self.id)
