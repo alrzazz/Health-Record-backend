@@ -49,6 +49,13 @@ class ManageDoctorsView(viewsets.ModelViewSet):
     filter_backends = [SearchFilter, OrderingFilter]
     ordering_fields = ["first_name", "last_name"]
 
+    def destroy(self, request, *args, **kwargs):
+        user = self.get_object().user
+        # user.is_active = False
+        # user.save()
+        user.delete()
+        return super().destroy(request, *args, **kwargs)
+
 
 class ManagePatientsView(viewsets.ModelViewSet):
     permission_classes = [IsManager]
@@ -58,6 +65,13 @@ class ManagePatientsView(viewsets.ModelViewSet):
     search_fields = ["first_name", "last_name", "speciality"]
     filter_backends = [SearchFilter, OrderingFilter]
     ordering_fields = ["first_name", "last_name"]
+
+    def destroy(self, request, *args, **kwargs):
+        user = self.get_object().user
+        # user.is_active = False
+        # user.save()
+        user.delete()
+        return super().destroy(request, *args, **kwargs)
 
 
 class UserChangePasswordView(generics.UpdateAPIView):
