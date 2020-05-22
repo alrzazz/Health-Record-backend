@@ -12,7 +12,7 @@ doctor_router.register(
     'medicines', views.ManageMedicineView, basename='medicine')
 doctor_router.register('calendar', views.DoctorCalendarView,
                        basename='calendar-doctor')
-doctor_router.register('all', views.DoctorAppointmentView,
+doctor_router.register('', views.DoctorAppointmentView,
                        basename='appointment-doctor')
 
 patient_router = DefaultRouter()

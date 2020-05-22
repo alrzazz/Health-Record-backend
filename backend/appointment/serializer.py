@@ -8,11 +8,12 @@ import datetime
 class SymptomSerializer(serializers.ModelSerializer):
     class Meta:
         model = Symptom
-        fields = "__all__"
+        fields = ["id", "name", "value"]
         extra_kwargs = {'doctor': {'read_only': True}}
 
     def create(self, validated_data):
-        doctor = Doctor.objects.get(user_id=self.context['request'].user.id)
+        doctor = Doctor.objects.get(
+            user_id=self.context['request'].user.id)
         validated_data["doctor_id"] = doctor.id
         return super().create(validated_data)
 
@@ -20,7 +21,7 @@ class SymptomSerializer(serializers.ModelSerializer):
 class DiseaseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Disease
-        fields = "__all__"
+        fields = ["id", "name"]
         extra_kwargs = {'doctor': {'read_only': True}}
 
     def create(self, validated_data):
@@ -32,7 +33,7 @@ class DiseaseSerializer(serializers.ModelSerializer):
 class AdviceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Advice
-        fields = "__all__"
+        fields = ["id", "name", "description"]
         extra_kwargs = {'doctor': {'read_only': True}}
 
     def create(self, validated_data):
@@ -44,7 +45,7 @@ class AdviceSerializer(serializers.ModelSerializer):
 class MedicineSerializer(serializers.ModelSerializer):
     class Meta:
         model = Medicine
-        fields = "__all__"
+        fields = ["id", "name", "duration"]
         extra_kwargs = {'doctor': {'read_only': True}}
 
     def create(self, validated_data):
@@ -77,66 +78,64 @@ class CalendarSerializer(serializers.ModelSerializer):
         return data
 
 
-class DoctorField(serializers.StringRelatedField):
-    def to_representation(self, value):
-        return value.first_name + " " + value.last_name
+class DoctorField(serializers.ModelSerializer):
+    class Meta:
+        model = Doctor
+        fields = ["first_name", "last_name", "speciality", "id", "gender"]
 
 
 class PatientCalendarSerializer(serializers.ModelSerializer):
     doctor = DoctorField()
-    speciality = serializers.ReadOnlyField(source="doctor.speciality")
 
     class Meta:
         model = Calendar
-        fields = ["id", "day", "start_time", "remained",
-                  "doctor", "speciality", "doctor_id"]
+        fields = ["id", "day", "start_time", "remained", "doctor"]
+
+
+class PatientCalendarSerializerDetails(serializers.ModelSerializer):
+    doctor = DoctorSerializer()
+
+    class Meta:
+        model = Calendar
+        fields = "__all__"
+        depth = 1
+
+
+class PatientField(serializers.ModelSerializer):
+    class Meta:
+        model = Patient
+        fields = ["first_name", "last_name", "id"]
 
 
 class AppointmentSerializer(serializers.ModelSerializer):
+    patient = PatientField()
+    calendar = CalendarSerializer()
+
     class Meta:
         model = Appointment
         fields = "__all__"
-
-    def validate(self, data):
-        turn = data["turn"]
-        if turn.accepted == False:
-            raise serializers.ValidationError(
-                "This turn still not accepted")
-        if turn.visited == True:
-            raise serializers.ValidationError(
-                "This turn already has an appointment")
-        return data
-
-    def create(self, validated_data):
-        turn = validated_data["turn"]
-        if turn.doctor.user.id != self.context['request'].user.id:
-            raise serializers.ValidationError("You can't visit this turn")
-        turn.visited = True
-        turn.save()
-        return super().create(validated_data)
+        extra_kwargs = {
+            'patient': {'read_only': True},
+            'turn': {'read_only': True},
+            'calendar': {'read_only': True}
+        }
 
 
-class AppointmentSerializerRecursive(serializers.ModelSerializer):
+class AppointmentReadonlySerializer(serializers.ModelSerializer):
     patient = PatientSerializer(read_only=True)
     doctor = DoctorSerializer(read_only=True)
     advices = AdviceSerializer(many=True)
     symptoms = SymptomSerializer(many=True)
     medicines = MedicineSerializer(many=True)
     disease = DiseaseSerializer(many=True)
+    calendar = CalendarSerializer()
 
     class Meta:
         model = Appointment
         fields = "__all__"
 
 
-class DoctorSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Doctor
-        fields = "__all__"
-
-
 class TurnReserveSerializer(serializers.Serializer):
-    action = serializers.MultipleChoiceField(
-        choices=["accept", "reject"], required=True)
+    action = serializers.ChoiceField(
+        choices=["accept", "reject", "status"], required=True)
     calendar_id = serializers.IntegerField(required=True)

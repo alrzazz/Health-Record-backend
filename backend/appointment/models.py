@@ -18,11 +18,10 @@ class Calendar(models.Model):
 
 class Symptom(models.Model):
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
-    kind = models.IntegerField(default=0)
     name = models.CharField(max_length=50, unique=True, error_messages={
         'unique': ("This symptom already exist."),
     })
-    value = models.FloatField()
+    value = models.CharField(max_length=50)
 
     def __str__(self):
         return self.name
