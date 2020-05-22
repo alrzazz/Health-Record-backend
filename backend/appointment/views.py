@@ -101,14 +101,6 @@ class DoctorCalendarView(viewsets.ModelViewSet):
         return queryset
 
 
-class DoctorAppointmentView(viewsets.ModelViewSet):
-    permission_classes = [IsDoctor]
-    serializer_class = AppointmentSerializer
-
-    def get_queryset(self):
-        return Appointment.objects.all().filter(doctor__user_id=self.request.user.id)
-
-
 class PatientListTurnView(viewsets.ModelViewSet):
     permission_classes = [IsPatient]
     pagination_class = ItemlimitPgination
@@ -149,12 +141,73 @@ class PatientListTurnView(viewsets.ModelViewSet):
         calendar_id = request.data.get("calendar_id")
         print(action)
         if action == "accept":
-            calendar = get_object_or_404(self.get_queryset(), id=calendar_id)
-            turn = calendar.total - calendar.remained + 1
-            patient = Patient.objects.get(user__id=self.request.user.id)
-            Appointment.objects.create(
-                calendar=calendar, turn=turn, patient=patient)
-            calendar.remained -= 1
-            calendar.save()
-            return Response(data={"message": "Your Turn reserved"}, status=status.HTTP_200_OK)
-        return Response(data={"message": "Turn not reserved"}, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                app = get_object_or_404(
+                    Appointment.objects.all(), patient__user_id=request.user.id, calendar_id=calendar_id)
+            except:
+                calendar = get_object_or_404(
+                    self.get_queryset(), id=calendar_id)
+                turn = calendar.total - calendar.remained + 1
+                patient = Patient.objects.get(user__id=self.request.user.id)
+                Appointment.objects.create(
+                    calendar=calendar, turn=turn, patient=patient)
+                calendar.remained -= 1
+                calendar.save()
+                return Response(data={"message": "Your Turn reserved"}, status=status.HTTP_200_OK)
+        if action == "status":
+            app = get_object_or_404(
+                Appointment.objects.all(), calendar_id=calendar_id, patient__user_id=request.user.id)
+            return Response(data={"message": "You already reserve this calendar"}, status=status.HTTP_200_OK)
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = PatientCalendarSerializerDetails(instance)
+        return Response(serializer.data)
+
+
+class DoctorAppointmentView(viewsets.ModelViewSet):
+    permission_classes = [IsDoctor]
+    # serializer_class = AppointmentSerializer
+    pagination_class = ItemlimitPgination
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ["patient__first_name",
+                     "patient__last_name"]
+    ordering_fields = ["calendar__day", "calendar__start_time"]
+
+    def create(self, request, pk=None):
+        response = {'message': 'create function is not offered in this path.'}
+        return Response(response, status=status.HTTP_403_FORBIDDEN)
+
+    def partial_update(self, request, pk=None):
+        app = self.get_object()
+        if app.done == False:
+            app.done = True
+            app.save()
+        return super().partial_update(request, pk)
+
+    def get_queryset(self):
+        queryset = Appointment.objects.all().filter(
+            calendar__doctor__user_id=self.request.user.id)
+
+        start = self.request.query_params.get("start")
+        queryset = queryset.filter(
+            calendar__day__gte=start) if start != None else queryset
+
+        end = self.request.query_params.get("end")
+        queryset = queryset.filter(
+            calendar__day__lte=end) if end != None else queryset
+
+        done = self.request.query_params.get("done")
+        done = True if done == "true" else False if done == "false" else None
+        queryset = queryset.filter(
+            done=done) if done != None else queryset
+
+        queryset.order_by("calendar__day", "calendar__start_time")
+
+        return queryset
+
+    def get_serializer_class(self):
+        print(self.request.method)
+        if self.request.method == "GET":
+            return AppointmentReadonlySerializer
+        return AppointmentSerializer
