@@ -5,7 +5,7 @@ from rest_framework import viewsets, mixins, status, views, generics
 from rest_framework.response import Response
 from django.http import Http404
 from django.shortcuts import get_object_or_404 as _get_object_or_404
-from .pagination import ItemlimitPgination
+from .pagination import ItemlimitPagination
 import datetime
 from rest_framework.filters import SearchFilter, OrderingFilter
 
@@ -20,7 +20,7 @@ def get_object_or_404(queryset, *filter_args, **filter_kwargs):
 class ManageSymptomView(viewsets.ModelViewSet):
     permission_classes = [IsDoctor]
     serializer_class = SymptomSerializer
-    pagination_class = ItemlimitPgination
+    pagination_class = ItemlimitPagination
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ["name"]
     ordering_fields = ["name"]
@@ -33,7 +33,7 @@ class ManageSymptomView(viewsets.ModelViewSet):
 class ManageDiseaseView(viewsets.ModelViewSet):
     permission_classes = [IsDoctor]
     serializer_class = DiseaseSerializer
-    pagination_class = ItemlimitPgination
+    pagination_class = ItemlimitPagination
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ["name"]
     ordering_fields = ["name"]
@@ -47,7 +47,7 @@ class ManageDiseaseView(viewsets.ModelViewSet):
 class ManageAdviceView(viewsets.ModelViewSet):
     permission_classes = [IsDoctor]
     serializer_class = AdviceSerializer
-    pagination_class = ItemlimitPgination
+    pagination_class = ItemlimitPagination
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ["name"]
     ordering_fields = ["name"]
@@ -60,7 +60,7 @@ class ManageAdviceView(viewsets.ModelViewSet):
 class ManageMedicineView(viewsets.ModelViewSet):
     permission_classes = [IsDoctor]
     serializer_class = MedicineSerializer
-    pagination_class = ItemlimitPgination
+    pagination_class = ItemlimitPagination
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ["name"]
     ordering_fields = ["name"]
@@ -73,7 +73,7 @@ class ManageMedicineView(viewsets.ModelViewSet):
 class DoctorCalendarView(viewsets.ModelViewSet):
     permission_classes = [IsDoctor]
     serializer_class = CalendarSerializer
-    pagination_class = ItemlimitPgination
+    pagination_class = ItemlimitPagination
     filter_backends = [OrderingFilter]
     ordering_fields = ["day", "start_time"]
     queryset = Calendar.objects.all()
@@ -103,7 +103,7 @@ class DoctorCalendarView(viewsets.ModelViewSet):
 
 class PatientListTurnView(viewsets.ModelViewSet):
     permission_classes = [IsPatient]
-    pagination_class = ItemlimitPgination
+    pagination_class = ItemlimitPagination
     serializer_class = PatientCalendarSerializer
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ["doctor__first_name",
@@ -161,6 +161,10 @@ class PatientListTurnView(viewsets.ModelViewSet):
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
+        delta = (instance.total - instance.remained) * \
+            datetime.timedelta(minutes=20)
+        instance.time = (datetime.datetime.combine(
+            datetime.date(1, 1, 1), instance.start_time) + delta).time()
         serializer = PatientCalendarSerializerDetails(instance)
         return Response(serializer.data)
 
@@ -168,7 +172,7 @@ class PatientListTurnView(viewsets.ModelViewSet):
 class DoctorAppointmentView(viewsets.ModelViewSet):
     permission_classes = [IsDoctor]
     # serializer_class = AppointmentSerializer
-    pagination_class = ItemlimitPgination
+    pagination_class = ItemlimitPagination
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ["patient__first_name",
                      "patient__last_name"]
@@ -215,3 +219,34 @@ class DoctorAppointmentView(viewsets.ModelViewSet):
         if self.request.method == "GET":
             return AppointmentReadonlySerializer
         return AppointmentSerializer
+
+
+class PatientAppointmentSrializer(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.RetrieveModelMixin):
+    permission_classes = [IsPatient]
+    serializer_class = AppointmentReadonlySerializer
+    pagination_class = ItemlimitPagination
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ["doctor__first_name",
+                     "doctor__last_name"]
+    ordering_fields = ["calendar__day", "calendar__start_time"]
+
+    def get_queryset(self):
+        queryset = Appointment.objects.all().filter(
+            patient__user_id=self.request.user.id)
+
+        start = self.request.query_params.get("start")
+        queryset = queryset.filter(
+            calendar__day__gte=start) if start != None else queryset
+
+        end = self.request.query_params.get("end")
+        queryset = queryset.filter(
+            calendar__day__lte=end) if end != None else queryset
+
+        done = self.request.query_params.get("done")
+        done = True if done == "true" else False if done == "false" else None
+        queryset = queryset.filter(
+            done=done) if done != None else queryset
+
+        queryset.order_by("calendar__day", "calendar__start_time")
+
+        return queryset
