@@ -18,9 +18,7 @@ class Calendar(models.Model):
 
 class Symptom(models.Model):
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
-    name = models.CharField(max_length=50, unique=True, error_messages={
-        'unique': ("This symptom already exist."),
-    })
+    name = models.CharField(max_length=50)
     value = models.CharField(max_length=50)
 
     def __str__(self):
@@ -29,9 +27,7 @@ class Symptom(models.Model):
 
 class Disease(models.Model):
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
-    name = models.CharField(max_length=50, unique=True, error_messages={
-        'unique': ("This disease already exist."),
-    })
+    name = models.CharField(max_length=50)
 
     def __str__(self):
         return self.name
@@ -39,9 +35,7 @@ class Disease(models.Model):
 
 class Advice(models.Model):
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
-    name = models.CharField(max_length=50, unique=True, error_messages={
-        'unique': ("This advice already exist."),
-    })
+    name = models.CharField(max_length=50)
     description = models.TextField()
 
     def __str__(self):
@@ -50,9 +44,7 @@ class Advice(models.Model):
 
 class Medicine(models.Model):
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
-    name = models.CharField(max_length=50, unique=True, error_messages={
-        'unique': ("This medicine already exist."),
-    })
+    name = models.CharField(max_length=50)
     duration = models.DurationField()
 
     def __str__(self):

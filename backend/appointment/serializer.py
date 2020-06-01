@@ -92,13 +92,13 @@ class PatientCalendarSerializer(serializers.ModelSerializer):
         fields = ["id", "day", "start_time", "remained", "doctor"]
 
 
-class PatientCalendarSerializerDetails(serializers.ModelSerializer):
+class PatientCalendarSerializerDetails(serializers.Serializer):
     doctor = DoctorSerializer()
-
-    class Meta:
-        model = Calendar
-        fields = "__all__"
-        depth = 1
+    start_time = serializers.DateField()
+    day = serializers.TimeField()
+    time = serializers.DateField()
+    remained = serializers.IntegerField()
+    total = serializers.IntegerField()
 
 
 class PatientField(serializers.ModelSerializer):
@@ -123,16 +123,16 @@ class AppointmentSerializer(serializers.ModelSerializer):
 
 class AppointmentReadonlySerializer(serializers.ModelSerializer):
     patient = PatientSerializer(read_only=True)
-    doctor = DoctorSerializer(read_only=True)
     advices = AdviceSerializer(many=True)
     symptoms = SymptomSerializer(many=True)
     medicines = MedicineSerializer(many=True)
     disease = DiseaseSerializer(many=True)
-    calendar = CalendarSerializer()
+    calendar = PatientCalendarSerializer()
 
     class Meta:
         model = Appointment
         fields = "__all__"
+        depth = 2
 
 
 class TurnReserveSerializer(serializers.Serializer):
