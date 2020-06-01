@@ -197,6 +197,10 @@ class DoctorAppointmentView(viewsets.ModelViewSet):
         queryset = queryset.filter(
             calendar__day__lte=end) if end != None else queryset
 
+        calendar = self.request.query_params.get("calendar")
+        queryset = queryset.filter(
+            calendar_id=calendar) if calendar != None else queryset
+
         done = self.request.query_params.get("done")
         done = True if done == "true" else False if done == "false" else None
         queryset = queryset.filter(
