@@ -17,6 +17,8 @@ doctor_router.register('', views.DoctorAppointmentView,
 
 patient_router = DefaultRouter()
 patient_router.register('turns', views.PatientListTurnView, basename='turns')
+patient_router.register(
+    '', views.PatientAppointmentSrializer, basename='appointment-patient')
 
 urlpatterns = [
     path('doctor/', include(doctor_router.urls)),
