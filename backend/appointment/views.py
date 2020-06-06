@@ -91,13 +91,18 @@ class DoctorCalendarView(viewsets.ModelViewSet):
 
         queryset = queryset.filter(doctor__user_id=self.request.user.id)
 
-        start = self.request.query_params.get("start")
-        queryset = queryset.filter(
-            day__gte=start) if start != None else queryset
+        start = self.request.query_params.get("start") 
+        queryset = queryset.filter(day__gte=start) if start not in [None, ""] else queryset
 
         end = self.request.query_params.get("end")
-        queryset = queryset.filter(day__lte=end) if end != None else queryset
+        queryset = queryset.filter(day__lte=end) if end not in [None, ""] else queryset
 
+        delta_day = self.request.query_params.get("delta_day")
+        if delta_day != None:
+            start = datetime.date.today()
+            end = start + datetime.timedelta(days=int(delta_day))
+            queryset = queryset.filter(day__gte=start, day__lte=end)
+        
         return queryset
 
 
@@ -119,10 +124,10 @@ class PatientListTurnView(viewsets.ModelViewSet):
 
         start = self.request.query_params.get("start")
         queryset = queryset.filter(
-            day__gte=start) if start != None else queryset
+            day__gte=start) if start not in [None, ""] else queryset
 
         end = self.request.query_params.get("end")
-        queryset = queryset.filter(day__lte=end) if end != None else queryset
+        queryset = queryset.filter(day__lte=end) if end not in [None,""] else queryset
 
         return queryset
 
@@ -195,15 +200,15 @@ class DoctorAppointmentView(viewsets.ModelViewSet):
 
         start = self.request.query_params.get("start")
         queryset = queryset.filter(
-            calendar__day__gte=start) if start != None else queryset
+            calendar__day__gte=start) if start not in [None, ""] else queryset
 
         end = self.request.query_params.get("end")
         queryset = queryset.filter(
-            calendar__day__lte=end) if end != None else queryset
+            calendar__day__lte=end) if end not in [None, ""] else queryset
 
         calendar = self.request.query_params.get("calendar")
         queryset = queryset.filter(
-            calendar_id=calendar) if calendar != None else queryset
+            calendar_id=calendar) if calendar not in [None, ""] else queryset
 
         done = self.request.query_params.get("done")
         done = True if done == "true" else False if done == "false" else None
@@ -236,11 +241,11 @@ class PatientAppointmentSrializer(viewsets.GenericViewSet, mixins.ListModelMixin
 
         start = self.request.query_params.get("start")
         queryset = queryset.filter(
-            calendar__day__gte=start) if start != None else queryset
+            calendar__day__gte=start) if start not in [None,""] else queryset
 
         end = self.request.query_params.get("end")
         queryset = queryset.filter(
-            calendar__day__lte=end) if end != None else queryset
+            calendar__day__lte=end) if end not in [None,""] else queryset
 
         done = self.request.query_params.get("done")
         done = True if done == "true" else False if done == "false" else None
