@@ -98,7 +98,7 @@ class DoctorCalendarView(viewsets.ModelViewSet):
         queryset = queryset.filter(day__lte=end) if end not in [None, ""] else queryset
 
         delta_day = self.request.query_params.get("delta_day")
-        if delta_day != None:
+        if delta_day not in [None, ""]:
             start = datetime.date.today()
             end = start + datetime.timedelta(days=int(delta_day))
             queryset = queryset.filter(day__gte=start, day__lte=end)
