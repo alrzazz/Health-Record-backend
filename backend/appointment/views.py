@@ -226,13 +226,13 @@ class DoctorAppointmentView(viewsets.ModelViewSet):
         return AppointmentSerializer
 
 
-class PatientAppointmentSrializer(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.RetrieveModelMixin):
+class PatientAppointmentView(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.RetrieveModelMixin):
     permission_classes = [IsPatient]
     serializer_class = AppointmentReadonlySerializer
     pagination_class = ItemlimitPagination
     filter_backends = [SearchFilter, OrderingFilter]
-    search_fields = ["doctor__first_name",
-                     "doctor__last_name"]
+    search_fields = ["calendar__doctor__first_name",
+                     "calendar__doctor__last_name"]
     ordering_fields = ["calendar__day", "calendar__start_time"]
 
     def get_queryset(self):
