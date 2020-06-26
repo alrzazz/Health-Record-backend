@@ -1,12 +1,13 @@
 from .permissions import IsManager, IsPatient, IsDoctor, NotManager
 from .models import User, Doctor, Patient
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework import status, permissions
+from rest_framework import status, permissions, exceptions
 from rest_framework import permissions, generics, viewsets, views
 from rest_framework.response import Response
-from .serializer import (RetrieveUserSerializer, DoctorSerializer, PatientSerializer,
-                         PatientProfileSerializer, ChangePasswordSerializer)
+from .serializer import *
 import json
+from .pagination import ItemlimitPgination
+from rest_framework.filters import SearchFilter, OrderingFilter
 
 
 class UserLogoutView(generics.CreateAPIView):
@@ -15,7 +16,7 @@ class UserLogoutView(generics.CreateAPIView):
     def post(self, request, format='json'):
         token = RefreshToken(request.data.get("refresh"))
         token.blacklist()
-        data = {'message': "خروج شما با موفقیت انجام شد."}
+        data = {'message': "Logged out successfully"}
         return Response(data=data, status=status.HTTP_200_OK)
 
 
@@ -23,49 +24,54 @@ class RetrieveUserView(generics.RetrieveAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, format='json'):
-        serializer = RetrieveUserSerializer(request.user)
+        serializer = UserSerializer(request.user)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
 
-class ProfileView(generics.RetrieveAPIView, generics.UpdateAPIView):
+class ProfileView(generics.RetrieveUpdateAPIView):
     permission_classes = [NotManager]
 
-    def get(self, request):
-        if request.user.role == 1:
-            serializer = DoctorSerializer(
-                Doctor.objects.all().get(user_id=request.user.id))
-            return Response(data=serializer.data, status=status.HTTP_200_OK)
-        if request.user.role == 2:
-            serializer = PatientSerializer(
-                Patient.objects.all().get(user_id=request.user.id))
-            return Response(data=serializer.data, status=status.HTTP_200_OK)
+    def get_serializer_class(self):
+        return DoctorSerializer if self.request.user.role == 1 else PatientSerializer
 
-    def put(self, request):
-        if request.user.role == 1:
-            instance = Doctor.objects.all().get(user_id=request.user.id)
-            serializer = DoctorSerializer(instance)
-            serializer.update(instance, request.data)
-            return Response(data=serializer.data, status=status.HTTP_200_OK)
-        if request.user.role == 2:
-            instance = Patient.objects.all().get(user_id=request.user.id)
-            serializer = PatientSerializer(instance)
-            serializer.update(instance, request.data)
-            return Response(data=serializer.data, status=status.HTTP_200_OK)
-
-    def patch(self, request):
-        return self.put(request)
+    def get_object(self):
+        if self.request.user.role == 1:
+            return Doctor.objects.get(user_id=self.request.user.id)
+        return Patient.objects.get(user_id=self.request.user.id)
 
 
 class ManageDoctorsView(viewsets.ModelViewSet):
     permission_classes = [IsManager]
     queryset = Doctor.objects.all()
     serializer_class = DoctorSerializer
+    pagination_class = ItemlimitPgination
+    search_fields = ["first_name", "last_name", "speciality"]
+    filter_backends = [SearchFilter, OrderingFilter]
+    ordering_fields = ["first_name", "last_name"]
+
+    def destroy(self, request, *args, **kwargs):
+        user = self.get_object().user
+        # user.is_active = False
+        # user.save()
+        user.delete()
+        return super().destroy(request, *args, **kwargs)
 
 
 class ManagePatientsView(viewsets.ModelViewSet):
     permission_classes = [IsManager]
     queryset = Patient.objects.all()
     serializer_class = PatientSerializer
+    pagination_class = ItemlimitPgination
+    search_fields = ["first_name", "last_name", "speciality"]
+    filter_backends = [SearchFilter, OrderingFilter]
+    ordering_fields = ["first_name", "last_name"]
+
+    def destroy(self, request, *args, **kwargs):
+        user = self.get_object().user
+        # user.is_active = False
+        # user.save()
+        user.delete()
+        return super().destroy(request, *args, **kwargs)
 
 
 class UserChangePasswordView(generics.UpdateAPIView):
@@ -74,19 +80,13 @@ class UserChangePasswordView(generics.UpdateAPIView):
     def update(self, request):
         serializer = ChangePasswordSerializer(data=request.data)
         if serializer.is_valid():
-            user_ins = User.objects.get(pk=request.user.id)
-            if not user_ins.check_password(serializer.data.get("old_password1")):
+            user_ins = request.user
+            if not user_ins.check_password(serializer.data.get("old_password")):
                 return Response({"old_password": ["Wrong password."]}, status=status.HTTP_400_BAD_REQUEST)
-            user_ins.set_password(serializer.data.get("new_password"))
+            user_ins.set_password(serializer.data.get("new_password1"))
             user_ins.save()
-            response = {
-                'status': 'success',
-                'code': status.HTTP_200_OK,
-                'message': 'Password updated successfully',
-                'data': []
-            }
 
-            return Response(response)
+            return Response(data={'message': 'Password updated successfully'}, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

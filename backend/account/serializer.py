@@ -2,18 +2,14 @@ from rest_framework import serializers
 from .models import User, Patient, Doctor
 
 
-class RetrieveUserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('id', 'username', 'email', 'role')
-        extra_kwargs = {'password': {'write_only': True}}
-
-
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username', 'email', 'password', 'role')
-        extra_kwargs = {'password': {'write_only': True}}
+        extra_kwargs = {
+            'password': {'write_only': True},
+            'role': {'read_only': True}
+        }
 
 
 class DoctorSerializer(serializers.ModelSerializer):
@@ -24,32 +20,24 @@ class DoctorSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def create(self, validated_data):
-        user_ins = User.objects.create_user(**dict(validated_data.pop("user")))
-        doctor = Doctor.objects.create(user_id=user_ins.pk, **validated_data)
-        return doctor
+        user_request = validated_data.pop("user")
+        user_request["role"] = 1
+        user_srializer = UserSerializer(data=user_request)
+        user_srializer.is_valid(raise_exception=True)
+        user_instance = User.objects.create_user(**user_request)
+        validated_data["user_id"] = user_instance.id
+        return super().create(validated_data)
 
     def update(self, instance, validated_data):
-        if validated_data["user"]:
-            new_user = dict(validated_data.pop("user"))
-            old_user = User.objects.get(pk=instance.user_id)
-            old_user.username = new_user.get(
-                'username', old_user.username)
-            old_user.email = new_user.get('email', old_user.email)
-            old_user.save()
-        instance.first_name = validated_data.get(
-            "first_name", instance.first_name)
-        instance.last_name = validated_data.get(
-            "last_name", instance.last_name)
-        instance.phone_number = validated_data.get(
-            "phone_number", instance.phone_number)
-        instance.address = validated_data.get("address", instance.address)
-        instance.bio = validated_data.get("bio", instance.bio)
-        instance.avatar = validated_data.get("avatar", instance.avatar)
-        # instance.birth_date = validated_data.get(
-        #     "birth_date", instance.birth_date)
-        # instance.gender = validated_data.get("gender", instance.gender)
-        instance.save()
-        return instance
+        if "user" in validated_data:
+            request_user = validated_data.pop("user")
+            instance_user = instance.user
+            serializer = UserSerializer(
+                instance_user, data=request_user, partial=True)
+            if(not serializer.is_valid()):
+                raise serializers.ValidationError
+            serializer.save()
+        return super().update(instance, validated_data)
 
 
 class PatientSerializer(serializers.ModelSerializer):
@@ -60,48 +48,37 @@ class PatientSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def create(self, validated_data):
-        user_ins = User.objects.create_user(**dict(validated_data.pop("user")))
-        patient = Patient.objects.create(user_id=user_ins.pk, **validated_data)
-        return patient
+        user_request = validated_data.pop("user")
+        user_request["role"] = 2
+        user_srializer = UserSerializer(data=user_request)
+        user_srializer.is_valid(raise_exception=True)
+        user_instance = User.objects.create_user(**user_request)
+        validated_data["user_id"] = user_instance.id
+        return super().create(validated_data)
 
     def update(self, instance, validated_data):
-        if validated_data["user"]:
-            new_user = dict(validated_data.pop("user"))
-            old_user = User.objects.get(pk=instance.user_id)
-            old_user.username = new_user.get(
-                'username', old_user.username)
-            old_user.email = new_user.get('email', old_user.email)
-            old_user.save()
-        instance.first_name = validated_data.get(
-            "first_name", instance.first_name)
-        instance.last_name = validated_data.get(
-            "last_name", instance.last_name)
-        instance.mobile_number = validated_data.get(
-            "mobile_number", instance.mobile_number)
-        instance.address = validated_data.get("address", instance.address)
-        # instance.birth_date = validated_data.get(
-        #     "birth_date", instance.birth_date)
-        # instance.gender = validated_data.get("gender", instance.gender)
-        instance.save()
-        return instance
-
-
-class PatientProfileSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
-
-    class Meta:
-        model = Patient
-        fields = "__all__"
+        if "user" in validated_data:
+            request_user = validated_data.pop("user")
+            instance_user = instance.user
+            serializer = UserSerializer(
+                instance_user, data=request_user, partial=True)
+            if(not serializer.is_valid()):
+                raise serializers.ValidationError
+            serializer.save()
+        return super().update(instance, validated_data)
 
 
 class ChangePasswordSerializer(serializers.Serializer):
-    model = User
-    old_password1 = serializers.CharField(required=True)
-    old_password2 = serializers.CharField(required=True)
-    new_password = serializers.CharField(required=True)
+    old_password = serializers.CharField(required=True)
+    new_password1 = serializers.CharField(required=True)
+    new_password2 = serializers.CharField(required=True)
 
     def validate(self, data):
-        if data["old_password1"] != data["old_password2"]:
+        if len(data["new_password1"]) < 6:
+            raise serializers.ValidationError(
+                "This password is too short, your password at least 6 character"
+            )
+        if data["new_password1"] != data["new_password2"]:
             raise serializers.ValidationError(
                 "confirmation password not match")
         return data
