@@ -144,7 +144,6 @@ class PatientListTurnView(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         action = request.data.get("action")
         calendar_id = request.data.get("calendar_id")
-        print(action)
         if action == "accept":
             try:
                 app = get_object_or_404(
@@ -220,7 +219,6 @@ class DoctorAppointmentView(viewsets.ModelViewSet):
         return queryset
 
     def get_serializer_class(self):
-        print(self.request.method)
         if self.request.method == "GET":
             return AppointmentReadonlySerializer
         return AppointmentSerializer
