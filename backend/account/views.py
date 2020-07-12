@@ -62,7 +62,7 @@ class ManagePatientsView(viewsets.ModelViewSet):
     queryset = Patient.objects.all()
     serializer_class = PatientSerializer
     pagination_class = ItemlimitPgination
-    search_fields = ["first_name", "last_name", "speciality"]
+    search_fields = ["first_name", "last_name"]
     filter_backends = [SearchFilter, OrderingFilter]
     ordering_fields = ["first_name", "last_name"]
 
