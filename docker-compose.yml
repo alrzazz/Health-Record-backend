@@ -1,0 +1,35 @@
+version: '3.7'
+
+volumes: 
+    pgdata:
+    static_data:
+
+services:
+    django:
+        build: 
+            context: ./backend 
+        volumes:
+            - static_data:/vol
+        ports:
+            - "8000:8000"
+        depends_on:
+            - postgres
+    postgres:
+        image: postgres
+        environment:
+            - POSTGRES_DB=postgres
+            - POSTGRES_USER=postgres
+            - POSTGRES_PASSWORD=postgres
+        ports: 
+            - "5432:5432"
+        volumes: 
+            - pgdata:/var/lib/postgresql/data
+
+    nginx:
+        build: ./nginx
+        ports: 
+            - 8080:8080
+        volumes: 
+            - static_data:/vol
+        depends_on: 
+            - django
