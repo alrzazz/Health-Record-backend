@@ -6,9 +6,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = '4e$7%gum@tx#h*mo)jend7&c%j9@!31o&!!y1+!s%befa(t1t4'
 
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost']
 
 
 # Application definition
@@ -22,7 +22,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
-    # 'django.contrib.postgres',
+    'django.contrib.postgres',
     'corsheaders',
     'account',
     'appointment'
@@ -62,18 +62,18 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 # Database
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
     # 'default': {
-    #     'ENGINE': 'django.db.backends.postgresql_psycopg2',
-    #     'NAME': 'health',
-    #     'USER': 'health',
-    #     'PASSWORD': '123',
-    #     'HOST': 'localhost',
-    #     'port': ''
+    #     'ENGINE': 'django.db.backends.sqlite3',
+    #     'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     # }
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',
+        'USER': 'postgres',
+        'PASSWORD': 'postgres',
+        'HOST': 'postgres',
+        'port': '5432'
+    }
 }
 
 
@@ -142,11 +142,11 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
-MEDIA_URL = '/media/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-STATIC_URL = '/static/'
+MEDIA_ROOT = '/vol/media/'
+MEDIA_URL = '/static/media/'
 
+STATIC_ROOT = '/vol/static/'
+STATIC_URL = '/static/static/'
 # corsheaders
 
 CORS_ORIGIN_ALLOW_ALL = True
